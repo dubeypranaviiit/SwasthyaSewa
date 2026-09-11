@@ -1,64 +1,185 @@
 # SwasthyaSewa — Smart Healthcare & Teleconsultation Platform
 
-SwasthyaSewa is a complete clinic management and teleconsultation suite. It includes a patient-facing portal, an administrative/doctor workstation console, and a serverless Express backend API supporting digital health cards, Razorpay payments, Gmail SMTP reminders, and Stream.io video consultations.
+SwasthyaSewa is a full-stack clinical management and teleconsultation platform designed to streamline doctor-patient interactions. It features a patient portal, a doctor/admin management workstation, and a scalable Express backend supporting real-time WebRTC video consultations, AI-powered health checkups, Redis distributed slot-locking, Razorpay checkout with cancellation refunds, and background email queues.
 
 ---
 
-## 1. Project Directory Structure
+## 🏗️ Architecture & Project Structure
 
-The project is structured as a monorepo containing three core components:
+The repository is structured as a monorepo containing three core applications:
 
-*   **`backend/`**: Node.js & Express API engine managing Mongoose schemas, token authorizations, emails, checkout validations, and automated cancellation refunds.
-*   **`frontend/`**: Patient portal (Vite + React) allowing users to schedule visits (online/offline), view digital health cards, and join consultations.
-*   **`admin/`**: Doctor & Admin workstation dashboard (Vite + React) for managing appointments, toggling doctor availability, viewing patient triage reports, starting calls, and tracking doctor earnings.
+```
+SwasthyaSewa/
+├── backend/        # Express.js REST API & micro-services
+├── frontend/       # Patient-facing portal (React + Vite + Tailwind CSS)
+├── admin/          # Doctor & Admin workstation console (React + Vite + Tailwind CSS)
+└── README.md       # Root project documentation
+```
+
+### Module Breakdown
+*   **`backend/`**: Node.js & Express API with MongoDB (Mongoose), Redis distributed slot locking, BullMQ async mail worker, Cloudinary image uploads, JWT auth, and Stream.io WebRTC tokens.
+*   **`frontend/`**: Patient portal for discovering doctors, booking appointments (in-clinic or discounted online teleconsultations), AI health checkup & report analysis, digital health cards, and joining live video calls.
+*   **`admin/`**: Clinical dashboard for administrators (adding doctors, reviewing platform bookings) and doctors (managing availability, viewing patient triage history, creating prescriptions, launching video sessions, and tracking earnings).
 
 ---
 
-## 2. Installation & Quick Start
+## ✨ Key Features
 
-Follow these steps to run the complete environment locally:
+### 🩺 Patient Experience
+- **Doctor Discovery & Filtering**: Search and filter specialists across disciplines (General Physician, Gynecologist, Dermatologist, Pediatrician, Neurologist, Gastroenterologist).
+- **Flexible Appointment Booking**: Choose between in-clinic visits and online teleconsultations (with an automated 20% discount applied to virtual sessions).
+- **Concurrency & Slot Locking**: Redis-backed distributed slot holds prevent double-booking during checkout.
+- **AI Health Check & Online Triage**: AI symptom analysis, medical report processing, triage risk flags, and recommended doctor specialties.
+- **WebRTC Video Consultations**: In-browser video rooms powered by Stream.io Video SDK with microphone/camera controls and live status.
+- **Digital Health Card & BMI**: Profile page with personal health ID, vitals tracking, and real-time BMI calculator.
+- **Prescription & Medical History**: Downloadable PDF prescriptions and chronological appointment logs.
+- **Secure Payments & Refunds**: Razorpay integration with instant verification and automated refund status tracking upon cancellation.
+
+### 👨‍⚕️ Doctor & Admin Workstation
+- **Doctor Console**: Toggle availability, adjust consultation fees, inspect patient medical checkup history, and launch video calls once payment is verified.
+- **Prescription Builder**: Modal interface for doctors to draft and save clinical notes and prescriptions directly to patient records.
+- **Dynamic Earnings Tracking**: Real-time revenue analytics that automatically exclude cancelled appointments.
+- **Admin Management**: Onboard new doctors with Cloudinary avatar uploads and audit platform-wide bookings.
+- **Responsive Layout**: Mobile-first collapsible navigation drawer tailored for tablet and mobile devices.
+
+### 🛡️ Backend & System Reliability
+- **Multi-Tier Rate Limiting**: Redis/in-memory rate limiters protecting authentication, OTP generation, booking, and payment routes.
+- **Resilient Email Queue**: Asynchronous OTP delivery via BullMQ with multi-provider failover (Brevo API, Resend, and Nodemailer Gmail SMTP).
+- **Security Hardening**: Protected with Helmet headers, JWT role validation (`User`, `Doctor`, `Admin`), and input sanitization.
+
+---
+
+## 🛠️ Tech Stack
+
+| Layer | Technologies |
+|---|---|
+| **Backend** | Node.js, Express.js, MongoDB (Mongoose), Redis (`ioredis`), BullMQ, JWT, Multer, Helmet |
+| **Frontend** | React 18, Vite, Tailwind CSS, `@stream-io/video-react-sdk`, Lucide Icons, Axios, React Router |
+| **Admin Portal** | React 18, Vite, Tailwind CSS, Axios, React Router, React Toastify |
+| **Third-Party Services** | Razorpay (Payments), Stream.io (WebRTC Video), Cloudinary (Media Storage), Brevo / Resend / Gmail SMTP (Email) |
+
+---
+
+## ⚙️ Environment Variables Setup
+
+### 1. `backend/.env`
+```env
+PORT=5000
+MONGODB_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/swasthyasewa
+JWT_SECRET=your_jwt_secret_key
+ADMIN_EMAIL=admin@swasthyasewa.com
+ADMIN_PASSWORD=your_admin_password
+CURRENCY=INR
+FRONTEND_URL=http://localhost:5173
+
+# Cloudinary
+CLOUDINARY_NAME=your_cloudinary_name
+CLOUDINARY_API_KEY=your_cloudinary_api_key
+CLOUDINARY_API_SECRET=your_cloudinary_api_secret
+
+# Razorpay
+RAZORPAY_KEY_ID=your_razorpay_key_id
+RAZORPAY_KEY_SECRET=your_razorpay_key_secret
+
+# Stream.io Video SDK
+STREAM_API_KEY=your_stream_api_key
+STREAM_API_SECRET=your_stream_api_secret
+
+# Redis (Optional: Falls back to memory cache/locks if not set)
+REDIS_URL=redis://default:<password>@<host>:<port>
+
+# Email Services (Brevo / Resend / Gmail SMTP)
+BREVO_API_KEY=your_brevo_api_key
+BREVO_SENDER_EMAIL=your_verified_sender@domain.com
+RESEND_API_KEY=your_resend_api_key
+SMTP_EMAIL=your_gmail@gmail.com
+SMTP_PASSWORD=your_gmail_app_password
+```
+
+### 2. `frontend/.env`
+```env
+VITE_BACKEND_URL=http://localhost:5000
+VITE_STREAM_API_KEY=your_stream_api_key
+VITE_RAZORPAY_KEY_ID=your_razorpay_key_id
+VITE_USE_MOCK_AI=true
+```
+
+### 3. `admin/.env`
+```env
+VITE_BACKEND_URL=http://localhost:5000
+VITE_FRONTEND_URL=http://localhost:5173
+```
+
+---
+
+## 🚀 Quick Start Guide
 
 ### Prerequisites
-Make sure you have **Node.js** (v18+) and **npm** installed.
+- [Node.js](https://nodejs.org/) (v18.x or higher)
+- [MongoDB](https://www.mongodb.com/) instance (local or MongoDB Atlas)
+- [Redis](https://redis.io/) (optional, in-memory fallback included)
 
-### Step 1: Configure Environment Variables
-You must set up `.env` files in each sub-directory using the templates provided in their respective folders.
-
-### Step 2: Running the Applications
-Open three separate terminal windows and execute:
+### Step 1: Clone and Install Dependencies
 
 ```bash
-# 1. Run the Backend API (Starts on port 5000)
+# Clone the repository
+git clone https://github.com/dubeypranaviiit/Doctor-Appointment.git
+cd SwasthyaSewa
+
+# Install backend dependencies
+cd backend && npm install
+
+# Install frontend dependencies
+cd ../frontend && npm install
+
+# Install admin dependencies
+cd ../admin && npm install
+```
+
+### Step 2: Run Development Servers
+
+Open three terminal windows or tabs:
+
+```bash
+# Terminal 1: Backend API (Port 5000)
 cd backend
-npm install
 npm run dev
 
-# 2. Run the Patient Portal (Starts on port 5173)
-cd ../frontend
-npm install
+# Terminal 2: Patient Portal (Port 5173)
+cd frontend
 npm run dev
 
-# 3. Run the Admin/Doctor Console (Starts on port 5174)
-cd ../admin
-npm install
+# Terminal 3: Doctor & Admin Console (Port 5174)
+cd admin
 npm run dev
 ```
 
 ---
 
-## 3. Key Core Features & Safeguards
+## 📡 API Overview
 
--   **Payment-Protected Video Consultations**: Doctors cannot start video consultation calls unless the appointment payment is verified. Unpaid appointments show a disabled "Payment Pending" button.
--   **Completed Session Security**: Completed appointments cannot be cancelled on the patient dashboard or through backend API endpoints. Once completed, all options (Cancel, Join, Pay) are replaced by a "Completed" badge.
--   **Dynamic Earnings Adjustment**: Cancelled appointments are automatically excluded from the doctor's total earnings dynamically.
--   **Responsive Layouts**: The doctor/admin console features a fully responsive sidebar that collapses to a compact icon-only view on mobile.
--   **Gmail SMTP OTP Verification**: Patient account creation uses standard Gmail SMTP to deliver verification codes securely to any email address.
--   **Digital Health Card & BMI**: The patient profile features a mock QR-coded digital health ID card with real-time BMI calculations.
+| Route Prefix | Access | Description |
+|---|---|---|
+| `POST /api/user/send-otp` | Public | Generate and send registration OTP via email |
+| `POST /api/user/verify-otp-signup` | Public | Verify OTP and register patient account |
+| `POST /api/user/login` | Public | Patient login & JWT issuance |
+| `POST /api/user/hold-slot` | User | Temporarily lock an appointment slot during booking |
+| `POST /api/user/book-appointment` | User | Confirm appointment booking |
+| `POST /api/user/payment-razorpay` | User | Create Razorpay payment order |
+| `POST /api/user/verify-razorpay` | User | Verify Razorpay payment signature |
+| `POST /api/video/create-call` | User | Initialize Stream.io WebRTC call session |
+| `GET /api/video/token` | User / Doctor | Generate WebRTC user token for video room |
+| `POST /api/doctor/login` | Public | Doctor authentication |
+| `GET /api/doctor/dashboard` | Doctor | Retrieve doctor stats, earnings, and appointments |
+| `POST /api/doctor/save-prescription` | Doctor | Save clinical prescription for an appointment |
+| `POST /api/admin/login` | Admin | Administrative login |
+| `POST /api/admin/add-doctor` | Admin | Register new doctor with profile photo |
+| `GET /api/admin/dashboard` | Admin | Platform-wide analytics and booking logs |
 
 ---
 
-## 4. Vercel Deployment
+## ☁️ Deployment
 
-Each directory is pre-configured with `vercel.json` and code exports to allow direct deployment to Vercel as three independent projects:
--   **Backend**: Exports the Express `app` module and connects eagerly to MongoDB & Cloudinary to run inside Vercel Node.js Serverless Functions.
--   **Frontend & Admin**: Configured with single-page application (SPA) rewrite rules in `vercel.json` to prevent route refreshes from resulting in 404 errors.
+Each application includes pre-configured `vercel.json` files for zero-config deployment on [Vercel](https://vercel.com/):
+- **`backend/`**: Deployed as a serverless Node.js Express API.
+- **`frontend/`** & **`admin/`**: Deployed as Single Page Applications (SPAs) with catch-all routing rules.
