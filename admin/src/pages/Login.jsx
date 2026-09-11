@@ -9,14 +9,14 @@ const Login = () => {
   const { setAToken, backendUrl } = useContext(AdminContext)
   const { setDToken } = useContext(DoctorContext)
   
-  const [email, setEmail] = useState('doctor@gmail.com')
+  const [email, setEmail] = useState('doctor1@gmail.com')
   const [password, setPassword] = useState('doctor123')
   const [isLoading, setIsLoading] = useState(false)
 
   const handleStateChange = (newState) => {
     setState(newState)
     if (newState === 'Doctor') {
-      setEmail('doctor@gmail.com')
+      setEmail('doctor1@gmail.com')
       setPassword('doctor123')
     } else {
       setEmail('')
@@ -123,7 +123,7 @@ const Login = () => {
               <input 
                 type="email" 
                 required
-                placeholder={state === 'Doctor' ? 'doctor@gmail.com' : 'admin@swasthyasewa.com'}
+                placeholder={state === 'Doctor' ? 'doctor1@gmail.com' : 'admin@swasthyasewa.com'}
                 className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all duration-200 text-sm text-gray-800 font-medium placeholder-gray-400" 
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
