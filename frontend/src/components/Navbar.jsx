@@ -20,12 +20,15 @@ const Navbar = () => {
         Swasthya<span className='text-primary'>Sewa</span>
       </h1>
 
-      <ul className='hidden md:flex items-center gap-5 lg:gap-8 font-semibold text-gray-700 text-xs lg:text-sm'>
+      <ul className='hidden md:flex items-center gap-4 lg:gap-7 font-semibold text-gray-700 text-xs lg:text-sm'>
         <NavLink to="/" className={({ isActive }) => `py-1 transition-colors ${isActive ? 'text-primary' : 'hover:text-primary'}`}>
           <li>HOME</li>
         </NavLink>
         <NavLink to="/doctors" className={({ isActive }) => `py-1 transition-colors ${isActive ? 'text-primary' : 'hover:text-primary'}`}>
           <li>ALL DOCTORS</li>
+        </NavLink>
+        <NavLink to="/ai-health-check" className={({ isActive }) => `py-1 transition-colors ${isActive ? 'text-primary font-bold' : 'hover:text-primary'}`}>
+          <li>AI HEALTH CHECK</li>
         </NavLink>
         <NavLink to="/online-checkup" className={({ isActive }) => `py-1 transition-colors ${isActive ? 'text-primary font-bold' : 'text-primary hover:text-opacity-80'}`}>
           <li>ONLINE CHECKUP</li>
@@ -79,6 +82,9 @@ const Navbar = () => {
               </NavLink>
               <NavLink onClick={() => setShowMenu(false)} to='/doctors' className="py-2.5 border-b border-gray-50">
                 <p className='hover:text-primary transition-all'>ALL DOCTORS</p>
+              </NavLink>
+              <NavLink onClick={() => setShowMenu(false)} to='/ai-health-check' className="py-2.5 border-b border-gray-50">
+                <p className='hover:text-primary transition-all font-bold text-primary'>AI HEALTH CHECK</p>
               </NavLink>
               <NavLink onClick={() => setShowMenu(false)} to='/online-checkup' className="py-2.5 border-b border-gray-50">
                 <p className='text-primary font-bold hover:text-opacity-80 transition-all'>ONLINE CHECKUP</p>
