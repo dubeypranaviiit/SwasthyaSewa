@@ -104,7 +104,7 @@ const bookAppointment = async (req, res) => {
             });
         }
 
-        const docData = await doctorModel.findById(docId).select("-password");
+        const docData = await doctorModel.findById(docId).select("-password").lean();
         if (!docData) {
             return res.status(404).json({
                 success: false,
@@ -149,7 +149,7 @@ const bookAppointment = async (req, res) => {
             });
         }
 
-        const userData = await userModel.findById(new mongoose.Types.ObjectId(userId)).select("-password");
+        let userData = await userModel.findById(new mongoose.Types.ObjectId(userId)).select("-password").lean();
         if (!userData) {
             await doctorModel.findByIdAndUpdate(docId, {
                 $pull: { [`slots_booked.${slotDate}`]: slotTime },
@@ -159,6 +159,28 @@ const bookAppointment = async (req, res) => {
                 success: false,
                 message: "User not found",
             });
+        }
+
+        // Sync and persist any updated profile fields passed with booking
+        const profileUpdates = {};
+        if (req.body.gender && req.body.gender !== 'Not Selected') {
+            userData.gender = req.body.gender;
+            profileUpdates.gender = req.body.gender;
+        }
+        if (req.body.dob && req.body.dob !== 'Not Selected') {
+            userData.dob = req.body.dob;
+            profileUpdates.dob = req.body.dob;
+        }
+        if (req.body.bloodGroup && req.body.bloodGroup !== 'Not Selected') {
+            userData.bloodGroup = req.body.bloodGroup;
+            profileUpdates.bloodGroup = req.body.bloodGroup;
+        }
+        if (req.body.phone && req.body.phone !== '0000000000') {
+            userData.phone = req.body.phone;
+            profileUpdates.phone = req.body.phone;
+        }
+        if (Object.keys(profileUpdates).length > 0) {
+            await userModel.findByIdAndUpdate(userId, profileUpdates);
         }
 
         delete docData.slots_booked;
@@ -251,10 +273,34 @@ const bookAppointment = async (req, res) => {
 const listAppointment = async (req, res) => {
     try {
         const { userId } = req.body;
-        const appointments = await Appointment.find({ userId });
+        const appointments = await Appointment.find({ userId }).lean();
+
+        const enrichedAppointments = await Promise.all(
+            appointments.map(async (item) => {
+                let doc = item.docData;
+                if (typeof doc === "string") {
+                    try {
+                        doc = JSON.parse(doc);
+                    } catch (e) {
+                        doc = null;
+                    }
+                }
+                if (!doc || !doc.name || !doc.image) {
+                    const freshDoc = await doctorModel.findById(item.docId).select("-password -slots_booked").lean();
+                    if (freshDoc) {
+                        doc = freshDoc;
+                    }
+                }
+                return {
+                    ...item,
+                    docData: doc || item.docData || {}
+                };
+            })
+        );
+
         res.status(200).json({
             success: true,
-            appointments,
+            appointments: enrichedAppointments,
         });
     } catch (error) {
         console.error("List appointment error:", error);

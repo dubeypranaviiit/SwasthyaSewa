@@ -2,11 +2,13 @@ import React, { useContext, useEffect, useState } from 'react'
 import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
 import { assets_admin } from '../../assets/assets_admin/assets'
+import DoctorDetailModal from '../../components/DoctorDetailModal'
 
 const AllAppointments = () => {
   const { aToken, appointments, getAllAppointments, cancelAppointment } = useContext(AdminContext)
   const { calculateAge } = useContext(AppContext)
   const [activeReport, setActiveReport] = useState(null)
+  const [selectedDocId, setSelectedDocId] = useState(null)
 
   useEffect(() => {
     if (aToken) {
@@ -71,9 +73,13 @@ const AllAppointments = () => {
                     </div>
                     <div>
                       <p className='text-gray-400 font-medium text-[10px] uppercase'>Doctor</p>
-                      <div className='flex items-center gap-1.5 mt-0.5'>
+                      <div 
+                        onClick={() => item.docId && setSelectedDocId(item.docId)}
+                        className='flex items-center gap-1.5 mt-0.5 cursor-pointer hover:opacity-80 transition'
+                        title="View Doctor 360° Profile"
+                      >
                         <img className='w-5 h-5 rounded-full object-cover bg-gray-200' src={docImage} alt={docName} />
-                        <p className='font-semibold text-gray-700 truncate text-xs'>{docName}</p>
+                        <p className='font-semibold text-primary truncate text-xs hover:underline'>{docName}</p>
                       </div>
                     </div>
                   </div>
@@ -167,9 +173,13 @@ const AllAppointments = () => {
                         <p className='text-gray-400 text-xs mt-0.5'>{item.slotTime}</p>
                       </div>
 
-                      <div className='flex items-center gap-2 min-w-0'> 
-                        <img className='w-7 h-7 rounded-full object-cover bg-gray-200 flex-shrink-0' src={docImage} alt={docName} />
-                        <p className='font-medium text-gray-700 truncate'>{docName}</p>
+                      <div 
+                        onClick={() => item.docId && setSelectedDocId(item.docId)}
+                        className='flex items-center gap-2 min-w-0 cursor-pointer group/doc'
+                        title="Click to view Doctor 360° Profile"
+                      > 
+                        <img className='w-7 h-7 rounded-full object-cover bg-gray-200 flex-shrink-0 border border-gray-200 group-hover/doc:scale-105 transition' src={docImage} alt={docName} />
+                        <p className='font-semibold text-gray-800 truncate text-xs group-hover/doc:text-primary transition'>{docName}</p>
                       </div>
 
                       <p className='font-bold text-gray-800'>{item.currency || '$'}{item.amount}</p>
@@ -204,6 +214,14 @@ const AllAppointments = () => {
           </div>
         </div>
       </div>
+
+      {selectedDocId && (
+        <DoctorDetailModal
+          docId={selectedDocId}
+          onClose={() => setSelectedDocId(null)}
+          onAvailabilityChange={() => getAllAppointments()}
+        />
+      )}
 
       {activeReport && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">

@@ -24,7 +24,7 @@ const appointmentSchema = new mongoose.Schema({
         required:true
     },
     docData:{
-        type:String,
+        type:Object,
         required:true
     },
     amount:{
@@ -85,6 +85,30 @@ const appointmentSchema = new mongoose.Schema({
     refundAmount:{
         type:Number,
         default:0
+    },
+    prescription: {
+        diagnosis: { type: String, default: "" },
+        symptoms: [{ type: String }],
+        vitals: {
+            bp: { type: String, default: "" },
+            pulse: { type: String, default: "" },
+            temperature: { type: String, default: "" },
+            weight: { type: String, default: "" }
+        },
+        medicines: [
+            {
+                name: { type: String, required: true },
+                dosage: { type: String, default: "1 Tab" },
+                frequency: { type: String, default: "1-0-1" },
+                duration: { type: String, default: "5 Days" },
+                timing: { type: String, default: "After Food" },
+                quantity: { type: Number, default: 10 }
+            }
+        ],
+        advice: { type: String, default: "" },
+        labTests: { type: String, default: "" },
+        nextFollowUpDate: { type: String, default: "" },
+        prescribedAt: { type: Date, default: null }
     }
 
 })

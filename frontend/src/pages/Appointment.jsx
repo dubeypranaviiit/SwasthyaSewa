@@ -1,19 +1,19 @@
 import React, { useState, useContext, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { AppContext } from '../context/AppContext';
-import { assets } from '../assets/assets_frontend/assets';
-import RelatedDoctors from '../components/RelatedDoctors';
-import { toast } from 'react-toastify';
-import axios from 'axios';
-import { Stethoscope, Clock, AlertTriangle } from 'lucide-react';
-import useSlotLock from '../hooks/useSlotLock';
+import { AppContext } from '../context/AppContext'
+import { assets } from '../assets/assets_frontend/assets'
+import RelatedDoctors from '../components/RelatedDoctors'
+import { toast } from 'react-toastify'
+import axios from 'axios'
+import { Stethoscope, Clock, AlertTriangle, UserCheck, Calendar, Phone, Droplet, X } from 'lucide-react'
+import useSlotLock from '../hooks/useSlotLock'
 
 const Appointment = () => {
-  const { docId } = useParams();
-  const navigate = useNavigate();
-  const { doctors, currencySymbol, backendurl, getDoctorsData, token } = useContext(AppContext);
+  const { docId } = useParams()
+  const navigate = useNavigate()
+  const { doctors, currencySymbol, backendurl, getDoctorsData, token, userData, loadUserProfileData } = useContext(AppContext)
   const [docInfo, setDocInfo] = useState(null)
-  
+
   const daysOfWeek = ['SUN', 'MON', 'TUE', 'WED', 'THU', 'FRI', 'SAT']
   const [docSlots, setDocSlots] = useState([])
   const [slotIndex, setSlotIndex] = useState(0)
@@ -22,6 +22,14 @@ const Appointment = () => {
   const [selectedCheckup, setSelectedCheckup] = useState(null)
   const [consultationType, setConsultationType] = useState('offline')
 
+  // Patient profile completion modal state
+  const [showProfileModal, setShowProfileModal] = useState(false)
+  const [patientGender, setPatientGender] = useState('')
+  const [patientDob, setPatientDob] = useState('')
+  const [patientBloodGroup, setPatientBloodGroup] = useState('')
+  const [patientPhone, setPatientPhone] = useState('')
+  const [isSubmittingProfile, setIsSubmittingProfile] = useState(false)
+
   const {
     heldSlot,
     isHolding,
@@ -29,7 +37,28 @@ const Appointment = () => {
     lockError,
     holdSlot,
     releaseSlot
-  } = useSlotLock(backendurl, token);
+  } = useSlotLock(backendurl, token)
+
+  useEffect(() => {
+    if (userData) {
+      if (userData.gender && userData.gender !== 'Not Selected') {
+        setPatientGender(userData.gender)
+      } else {
+        setPatientGender('')
+      }
+      if (userData.dob && userData.dob !== 'Not Selected' && userData.dob !== '0000-00-00') {
+        setPatientDob(userData.dob)
+      } else {
+        setPatientDob('')
+      }
+      if (userData.bloodGroup && userData.bloodGroup !== 'Not Selected') {
+        setPatientBloodGroup(userData.bloodGroup)
+      }
+      if (userData.phone && userData.phone !== '0000000000') {
+        setPatientPhone(userData.phone)
+      }
+    }
+  }, [userData, showProfileModal])
 
   const fetchCheckupHistory = async () => {
     try {
@@ -54,21 +83,21 @@ const Appointment = () => {
   }
 
   const getAvailableSlots = async () => {
-    setDocSlots([]);
-    const today = new Date();
+    setDocSlots([])
+    const today = new Date()
     for (let i = 0; i < 7; i++) {
-      let currentDate = new Date(today);
+      let currentDate = new Date(today)
       currentDate.setDate(today.getDate() + i)
-      
+
       let endTime = new Date()
       endTime.setDate(today.getDate() + i)
       endTime.setHours(21, 0, 0, 0)
-      
+
       if (today.getDate() === currentDate.getDate()) {
         currentDate.setHours(currentDate.getHours() > 10 ? currentDate.getHours() + 1 : 10)
         currentDate.setMinutes(currentDate.getMinutes() > 30 ? 30 : 0)
       } else {
-        currentDate.setHours(10);
+        currentDate.setHours(10)
         currentDate.setMinutes(0)
       }
 
@@ -76,15 +105,15 @@ const Appointment = () => {
       while (currentDate < endTime) {
         let formattedTime = currentDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
         let day = currentDate.getDate()
-        let month = currentDate.getMonth() + 1 
+        let month = currentDate.getMonth() + 1
         let year = currentDate.getFullYear()
-        const slotDate = `${day}-${month}-${year}`;
+        const slotDate = `${day}-${month}-${year}`
         const slotTime = formattedTime
 
-        const isSlotAvailable = docInfo && 
-          docInfo.slots_booked && 
-          docInfo.slots_booked[slotDate] && 
-          docInfo.slots_booked[slotDate].includes(slotTime) ? false : true;
+        const isSlotAvailable = docInfo &&
+          docInfo.slots_booked &&
+          docInfo.slots_booked[slotDate] &&
+          docInfo.slots_booked[slotDate].includes(slotTime) ? false : true
 
         if (isSlotAvailable) {
           timeSlots.push({
@@ -100,21 +129,59 @@ const Appointment = () => {
   }
 
   const handleSelectSlotTime = async (time) => {
-    setSlotTime(time);
-    if (!token || !docSlots[slotIndex] || !docSlots[slotIndex][0]) return;
-    const date = docSlots[slotIndex][0].datetime;
-    const day = date.getDate();
-    const month = date.getMonth() + 1;
-    const year = date.getFullYear();
-    const slotDate = `${day}-${month}-${year}`;
+    setSlotTime(time)
+    if (!token || !docSlots[slotIndex] || !docSlots[slotIndex][0]) return
+    const date = docSlots[slotIndex][0].datetime
+    const day = date.getDate()
+    const month = date.getMonth() + 1
+    const year = date.getFullYear()
+    const slotDate = `${day}-${month}-${year}`
 
-    const res = await holdSlot(docId, slotDate, time, 300);
+    const res = await holdSlot(docId, slotDate, time, 300)
     if (!res.success && res.status === 409) {
-      toast.error('Slot currently held by another patient. Please choose another time.');
+      toast.error('Slot currently held by another patient. Please choose another time.')
     }
-  };
+  }
 
-  const bookAppointment = async () => {
+  const executeBooking = async (overrideData = {}) => {
+    try {
+      const date = docSlots[slotIndex][0].datetime
+      let day = date.getDate()
+      let month = date.getMonth() + 1
+      let year = date.getFullYear()
+      const slotDate = `${day}-${month}-${year}`
+
+      const payload = {
+        docId,
+        slotDate,
+        slotTime,
+        checkupReport: selectedCheckup ? JSON.stringify(selectedCheckup) : null,
+        consultationType,
+        ...overrideData,
+      }
+
+      const { data } = await axios.post(
+        backendurl + '/api/user/book-appointment',
+        payload,
+        { headers: { token } }
+      )
+
+      if (data.success) {
+        toast.success(data.message)
+        getDoctorsData()
+        if (loadUserProfileData) loadUserProfileData()
+        navigate('/my-appointment')
+      } else {
+        toast.error(data.message)
+      }
+    } catch (error) {
+      console.log(error)
+      const msg = error.response?.data?.message || error.message || 'Booking failed'
+      toast.error(msg)
+    }
+  }
+
+  const handleBookingClick = () => {
     if (!token) {
       toast.warn('Please log in to book an appointment')
       return navigate('/login')
@@ -123,40 +190,69 @@ const Appointment = () => {
       toast.warn('Please select a time slot')
       return
     }
+
+    const hasGender = userData?.gender && userData.gender !== 'Not Selected' && userData.gender.trim() !== ''
+    const hasDob = userData?.dob && userData.dob !== 'Not Selected' && userData.dob.trim() !== '' && userData.dob !== '0000-00-00'
+
+    if (!hasGender || !hasDob) {
+      setShowProfileModal(true)
+      return
+    }
+
+    executeBooking()
+  }
+
+  const handleProfileSubmitAndBook = async (e) => {
+    e.preventDefault()
+    if (!patientGender || patientGender === 'Not Selected') {
+      toast.warn('Please select your gender')
+      return
+    }
+    if (!patientDob || patientDob === 'Not Selected') {
+      toast.warn('Please provide your date of birth')
+      return
+    }
+
     try {
-      const date = docSlots[slotIndex][0].datetime
-      let day = date.getDate()
-      let month = date.getMonth() + 1
-      let year = date.getFullYear()
-      const slotDate = `${day}-${month}-${year}`;
-      const { data } = await axios.post(backendurl + '/api/user/book-appointment', {
-        docId,
-        slotDate,
-        slotTime,
-        checkupReport: selectedCheckup ? JSON.stringify(selectedCheckup) : null,
-        consultationType
-      }, { headers: { token } })
+      setIsSubmittingProfile(true)
+      const { data } = await axios.post(
+        backendurl + '/api/user/update-profile',
+        {
+          name: userData?.name || 'User',
+          phone: patientPhone || userData?.phone || '0000000000',
+          gender: patientGender,
+          dob: patientDob,
+          bloodGroup: patientBloodGroup || userData?.bloodGroup || 'Not Selected',
+        },
+        { headers: { token } }
+      )
 
       if (data.success) {
-        toast.success(data.message)
-        getDoctorsData()
-        navigate('/my-appointment')
+        if (loadUserProfileData) await loadUserProfileData()
+        setShowProfileModal(false)
+        await executeBooking({
+          gender: patientGender,
+          dob: patientDob,
+          bloodGroup: patientBloodGroup || 'Not Selected',
+          phone: patientPhone || userData?.phone || '0000000000',
+        })
       } else {
         toast.error(data.message)
       }
-    } catch (error) {
-      console.log(error);
-      const msg = error.response?.data?.message || error.message || 'Booking failed';
-      toast.error(msg);
+    } catch (err) {
+      console.error(err)
+      toast.error(err.response?.data?.message || err.message || 'Failed to update patient profile')
+    } finally {
+      setIsSubmittingProfile(false)
     }
   }
 
   useEffect(() => {
-    fetchDOcInfo();
+    fetchDOcInfo()
   }, [doctors, docId])
 
   useEffect(() => {
-    getAvailableSlots();
+    getAvailableSlots()
   }, [docInfo])
 
   return docInfo && (
@@ -316,7 +412,7 @@ const Appointment = () => {
           {consultationType === 'online' ? (
             <p className="text-xs text-emerald-600 mt-3 flex items-center gap-1">
               <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
-              You will receive the video consultation link via email when the doctor starts the call.
+              Room access opens at the scheduled slot time or when your doctor begins the session.
             </p>
           ) : (
             <p className="text-xs text-gray-500 mt-3 flex items-center gap-1">
@@ -327,12 +423,126 @@ const Appointment = () => {
         </div>
 
         <button 
-          onClick={bookAppointment}
+          onClick={handleBookingClick}
           className='w-full sm:w-auto bg-primary text-white text-xs sm:text-sm font-bold px-12 py-3.5 rounded-full my-4 shadow-lg hover:bg-opacity-95 active:scale-95 transition-all'
         >
           Book an appointment
         </button>
       </div>
+
+      {showProfileModal && (
+        <div className="fixed inset-0 z-50 bg-gray-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 sm:p-7 shadow-2xl border border-gray-100 animate-in fade-in zoom-in-95">
+            <div className="flex items-start justify-between pb-4 border-b border-gray-100">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-indigo-50 border border-indigo-100 rounded-2xl flex items-center justify-center text-primary">
+                  <UserCheck className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-gray-900 text-base sm:text-lg">Patient Information</h3>
+                  <p className="text-xs text-gray-500">Required for doctor consultation records</p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setShowProfileModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-lg hover:bg-gray-100 transition"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleProfileSubmitAndBook} className="mt-5 space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5">
+                  Gender <span className="text-red-500">*</span>
+                </label>
+                <div className="grid grid-cols-3 gap-2">
+                  {['Male', 'Female', 'Other'].map((g) => (
+                    <button
+                      key={g}
+                      type="button"
+                      onClick={() => setPatientGender(g)}
+                      className={`py-2 px-3 text-xs font-bold rounded-xl border transition-all ${
+                        patientGender === g
+                          ? 'bg-primary text-white border-primary shadow-sm'
+                          : 'bg-gray-50 border-gray-200 text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      {g}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                  <Calendar className="w-3.5 h-3.5 text-primary" /> Date of Birth <span className="text-red-500">*</span>
+                </label>
+                <input
+                  type="date"
+                  required
+                  max={new Date().toISOString().split('T')[0]}
+                  value={patientDob}
+                  onChange={(e) => setPatientDob(e.target.value)}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-gray-200 text-xs sm:text-sm font-medium text-gray-800 focus:border-primary focus:ring-1 focus:ring-primary outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <Droplet className="w-3.5 h-3.5 text-red-500" /> Blood Group
+                  </label>
+                  <select
+                    value={patientBloodGroup}
+                    onChange={(e) => setPatientBloodGroup(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 focus:border-primary outline-none bg-white"
+                  >
+                    <option value="">Select</option>
+                    {['A+', 'A-', 'B+', 'B-', 'O+', 'O-', 'AB+', 'AB-'].map((bg) => (
+                      <option key={bg} value={bg}>{bg}</option>
+                    ))}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 mb-1.5 flex items-center gap-1.5">
+                    <Phone className="w-3.5 h-3.5 text-gray-500" /> Phone
+                  </label>
+                  <input
+                    type="tel"
+                    placeholder="Phone number"
+                    value={patientPhone}
+                    onChange={(e) => setPatientPhone(e.target.value)}
+                    className="w-full px-3 py-2.5 rounded-xl border border-gray-200 text-xs font-medium text-gray-800 focus:border-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="bg-indigo-50/50 border border-indigo-100 rounded-xl p-3 text-[11px] text-gray-600 leading-relaxed">
+                Your Age and Gender are shared securely with your consulting physician for accurate diagnoses and medical records.
+              </div>
+
+              <div className="flex items-center gap-3 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setShowProfileModal(false)}
+                  className="flex-1 py-2.5 px-4 rounded-xl border border-gray-200 text-gray-600 hover:bg-gray-50 font-bold text-xs transition"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isSubmittingProfile}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-primary hover:bg-[#4351ea] text-white font-bold text-xs shadow-md transition disabled:opacity-50"
+                >
+                  {isSubmittingProfile ? 'Saving…' : 'Save & Confirm'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <RelatedDoctors docId={docId} speciality={docInfo.speciality}/>
     </div>

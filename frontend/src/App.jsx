@@ -6,6 +6,7 @@ import MyProfile from './pages/MyProfile'
 import Login from './pages/Login'
 import Contact from './pages/Contact'
 import MyAppointement from './pages/MyAppointement'
+import MedicalHistory from './pages/MedicalHistory'
 import Navbar from './components/Navbar'
 import About from './pages/About'
 import Appointment from './pages/Appointment'
@@ -35,6 +36,7 @@ function App() {
           <Route path='/contact' element={<Contact/>} />
           <Route path='/login' element={<Login/>} />
           <Route path='/my-appointment' element={<MyAppointement/>} />
+          <Route path='/medical-history' element={<MedicalHistory/>} />
           <Route path='/appointment/:docId' element={<Appointment/>} />
           <Route path='/online-checkup' element={<OnlineCheckup/>} />
           <Route path='/privacy-policy' element={<PrivacyPolicy/>} />

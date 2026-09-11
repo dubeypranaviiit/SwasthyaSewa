@@ -1,6 +1,6 @@
 import express from "express"
 import { signUp, login, sendOtp, verifyOtpAndSignup } from "../controllers/userAuth.js";
-import { getProfile, updateProfile, saveCheckup, getCheckups } from "../controllers/userController.js"
+import { getProfile, updateProfile, saveCheckup, getCheckups, getMedicalHistory } from "../controllers/userController.js"
 import { authUser } from "../middleware/authUser.js"
 import upload from "../middleware/multer.js";
 import { bookAppointment, listAppointment, cancelAppointment, holdSlot, releaseSlot } from "../controllers/userAppointment.js";
@@ -19,6 +19,7 @@ import {
 const userRouter = express.Router();
 
 userRouter.get('/list-appointment', upload.none(), authUser, listAppointment)
+userRouter.get('/medical-history', upload.none(), authUser, getMedicalHistory)
 userRouter.get('/profile', upload.none(), authUser, getProfile)
 userRouter.post('/signUp', upload.none(), authLimiter, signUp)
 userRouter.post('/login', upload.none(), authLimiter, login)

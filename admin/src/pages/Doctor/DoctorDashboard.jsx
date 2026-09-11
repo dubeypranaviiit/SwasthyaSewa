@@ -1,13 +1,17 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { DoctorContext } from '../../context/DoctorContext'
 import { AppContext } from '../../context/AppContext'
 import { assets_admin } from '../../assets/assets_admin/assets'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import PrescriptionModal from '../../components/PrescriptionModal'
+import PatientHistoryDrawer from '../../components/PatientHistoryDrawer'
 
 const DoctorDashboard = () => {
   const { dToken, dashData, getDashData, appointmentComplete, appointmentCancel, backendUrl, frontendUrl } = useContext(DoctorContext)
   const { currency, calculateAge } = useContext(AppContext)
+  const [activePrescriptionAppointment, setActivePrescriptionAppointment] = useState(null)
+  const [activeHistoryPatient, setActiveHistoryPatient] = useState(null)
 
   useEffect(() => {
     if (dToken) {
@@ -93,6 +97,12 @@ const DoctorDashboard = () => {
                       <span className='text-xs text-gray-400 font-medium'>
                         Age: {calculateAge(item.userData?.dob)}
                       </span>
+                      <button
+                        onClick={() => setActiveHistoryPatient({ userId: item.userId, name: item.userData?.name })}
+                        className="text-[9px] bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded font-bold hover:bg-gray-200 transition"
+                      >
+                        History
+                      </button>
                     </div>
                   </div>
                 </div>
@@ -112,9 +122,25 @@ const DoctorDashboard = () => {
                     {item.cancelled ? (
                       <span className="text-red-500 font-bold text-xs bg-red-50 px-2.5 py-1 rounded-md border border-red-100">Cancelled</span>
                     ) : item.isCompleted ? (
-                      <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">Completed</span>
+                      <div className="flex items-center gap-2">
+                        <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded-md border border-emerald-100">Completed</span>
+                        <button
+                          onClick={() => setActivePrescriptionAppointment(item)}
+                          className="text-[11px] font-bold px-2.5 py-1 rounded-lg border border-indigo-200 bg-indigo-50/80 text-primary hover:bg-indigo-100 transition"
+                        >
+                          {item.prescription?.diagnosis ? 'View / Edit Rx' : 'Write Rx'}
+                        </button>
+                      </div>
                     ) : (
                       <div className='flex items-center gap-2'>
+                        <button
+                          onClick={() => setActivePrescriptionAppointment(item)}
+                          className="text-[11px] font-bold px-2 py-1 rounded-lg border border-indigo-200 bg-indigo-50/80 text-primary hover:bg-indigo-100 transition"
+                          title="Prescribe Medication"
+                        >
+                          {item.prescription?.diagnosis ? 'Edit Rx' : 'Write Rx'}
+                        </button>
+                        
                         {item.consultationType === 'online' && (
                           <button
                             onClick={() => {
@@ -159,6 +185,25 @@ const DoctorDashboard = () => {
           )}
         </div>
       </div>
+
+      {activePrescriptionAppointment && (
+        <PrescriptionModal
+          appointment={activePrescriptionAppointment}
+          onClose={() => setActivePrescriptionAppointment(null)}
+          onSuccess={() => {
+            getDashData()
+            setActivePrescriptionAppointment(null)
+          }}
+        />
+      )}
+
+      {activeHistoryPatient && (
+        <PatientHistoryDrawer
+          userId={activeHistoryPatient.userId}
+          patientName={activeHistoryPatient.name}
+          onClose={() => setActiveHistoryPatient(null)}
+        />
+      )}
     </div>
   )
 }

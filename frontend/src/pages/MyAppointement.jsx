@@ -3,16 +3,38 @@ import { AppContext } from '../context/AppContext'
 import axios from 'axios'
 import { toast } from 'react-toastify'
 import { useNavigate } from "react-router-dom"
+import PrescriptionPDF from '../components/PrescriptionPDF'
+import { isSlotTimeReached, getTimeUntilSlot } from '../utils/slotHelper'
 
 const MyAppointment = () => {
   const navigate = useNavigate()
   const { backendurl, token, getDoctorsData } = useContext(AppContext)
   const [appointments, setAppointments] = useState([])
+  const [selectedPrescriptionAppointment, setSelectedPrescriptionAppointment] = useState(null)
   const months = [" ", "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
 
   const slotDateFormat = (slotDate) => {
     const dateArray = slotDate.split('-')
     return dateArray[0] + " " + months[Number(dateArray[1])] + " " + dateArray[2]
+  }
+
+  const parseDoc = (doc) => {
+    if (!doc) return { name: 'Doctor', speciality: 'General Physician', image: '' }
+    if (typeof doc === 'object') return doc
+    try {
+      const parsed = JSON.parse(doc)
+      if (typeof parsed === 'object' && parsed !== null) return parsed
+    } catch (e) {
+      const nameMatch = doc.match(/name:\s*'([^']+)'/) || doc.match(/name:\s*"([^"]+)"/)
+      const imageMatch = doc.match(/image:\s*'([^']+)'/) || doc.match(/image:\s*"([^"]+)"/)
+      const specMatch = doc.match(/speciality:\s*'([^']+)'/) || doc.match(/speciality:\s*"([^"]+)"/)
+      return {
+        name: nameMatch ? nameMatch[1] : 'Doctor',
+        image: imageMatch ? imageMatch[1] : '',
+        speciality: specMatch ? specMatch[1] : 'General Physician',
+      }
+    }
+    return { name: 'Doctor', speciality: 'General Physician', image: '' }
   }
 
   const getUserAppointments = async () => {
@@ -119,38 +141,60 @@ const MyAppointment = () => {
             </button>
           </div>
         ) : (
-          appointments.map((item, index) => (
-            <div 
-              className='flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-5 border border-gray-200 rounded-2xl bg-white shadow-sm hover:border-gray-300 transition-all items-start sm:items-center justify-between' 
-              key={index}
-            >
-              <div className="flex gap-4 items-start sm:items-center flex-1">
-                <img className='w-24 sm:w-28 h-24 sm:h-28 object-cover object-top bg-indigo-50/60 rounded-xl border border-gray-100 flex-shrink-0' src={item.docData.image} alt={item.docData.name} />
-                
-                <div className='text-xs sm:text-sm text-gray-600 space-y-1 min-w-0'>
-                  <p className='text-gray-900 font-bold text-base sm:text-lg tracking-tight truncate'>{item.docData.name}</p>
-                  <p className='text-xs text-gray-500 font-medium'>{item.docData.speciality}</p>
+          appointments.map((item, index) => {
+            const doc = parseDoc(item.docData)
+            return (
+              <div 
+                className='flex flex-col sm:flex-row gap-4 sm:gap-6 p-4 sm:p-5 border border-gray-200 rounded-2xl bg-white shadow-sm hover:border-gray-300 transition-all items-start sm:items-center justify-between' 
+                key={index}
+              >
+                <div className="flex gap-4 items-start sm:items-center flex-1">
+                  <img className='w-24 sm:w-28 h-24 sm:h-28 object-cover object-top bg-indigo-50/60 rounded-xl border border-gray-100 flex-shrink-0' src={doc.image || 'https://via.placeholder.com/150'} alt={doc.name} />
                   
-                  <div className="flex items-center gap-1.5 py-1">
-                    <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                      item.consultationType === 'online' 
-                        ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
-                        : 'bg-indigo-50 text-primary border-indigo-200'
-                    }`}>
-                      {item.consultationType === 'online' ? 'Online Consultation' : 'Clinic Visit'}
-                    </span>
-                  </div>
+                  <div className='text-xs sm:text-sm text-gray-600 space-y-1 min-w-0'>
+                    <p className='text-gray-900 font-bold text-base sm:text-lg tracking-tight truncate'>{doc.name}</p>
+                    <p className='text-xs text-gray-500 font-medium'>{doc.speciality}</p>
+                    
+                    <div className="flex items-center gap-1.5 py-1">
+                      <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                        item.consultationType === 'online' 
+                          ? 'bg-emerald-50 text-emerald-600 border-emerald-200' 
+                          : 'bg-indigo-50 text-primary border-indigo-200'
+                      }`}>
+                        {item.consultationType === 'online' ? 'Online Consultation' : 'Clinic Visit'}
+                      </span>
+                    </div>
 
-                  {item.consultationType === 'online' ? (
-                    <div className="bg-emerald-50/40 border border-emerald-100 rounded-xl p-2 max-w-xs text-xs">
-                      <p className="font-semibold text-emerald-700 text-[11px]">Virtual Call Room</p>
-                      <p className="text-[10px] text-gray-500">Session link active upon physician start.</p>
-                    </div>
-                  ) : (
-                    <div className="text-xs space-y-0.5 pt-0.5">
-                      <p className='text-gray-700 font-medium'>Address: <span className="text-gray-500 font-normal">{item.docData.address?.line1 || item.docData.address || 'Booty More'}, {item.docData.address?.line2 || 'Ranchi'}</span></p>
-                    </div>
-                  )}
+                    {item.consultationType === 'online' ? (
+                      <div className="bg-emerald-50/40 border border-emerald-100 rounded-xl p-2.5 max-w-xs text-xs space-y-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="font-bold text-emerald-700 text-[11px]">Virtual Call Room</p>
+                          {item.videoCallStatus === 'active' ? (
+                            <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-600">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-ping"></span>
+                              Doctor Live
+                            </span>
+                          ) : isSlotTimeReached(item.slotDate, item.slotTime) ? (
+                            <span className="text-[10px] font-semibold text-emerald-600">Room Ready</span>
+                          ) : (
+                            <span className="text-[10px] font-medium text-amber-600">
+                              {getTimeUntilSlot(item.slotDate, item.slotTime) || 'Scheduled'}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] text-gray-500 leading-tight">
+                          {item.videoCallStatus === 'active'
+                            ? 'Physician is online and waiting in the call room.'
+                            : isSlotTimeReached(item.slotDate, item.slotTime)
+                            ? 'Scheduled slot time is reached. You can join the room.'
+                            : 'Room access activates at slot time or when doctor starts early.'}
+                        </p>
+                      </div>
+                    ) : (
+                      <div className="text-xs space-y-0.5 pt-0.5">
+                        <p className='text-gray-700 font-medium'>Address: <span className="text-gray-500 font-normal">{doc.address?.line1 || doc.address || 'Booty More'}, {doc.address?.line2 || 'Ranchi'}</span></p>
+                      </div>
+                    )}
 
                   <p className='text-xs pt-1 text-gray-800 font-medium'>
                     <span className='text-gray-500 font-normal'>Date & Time: </span>
@@ -161,16 +205,30 @@ const MyAppointment = () => {
 
               <div className='flex flex-col gap-2.5 w-full sm:w-auto sm:min-w-[180px] pt-3 sm:pt-0 border-t sm:border-t-0 border-gray-100'>
                 {!item.cancelled && !item.isCompleted && item.consultationType === 'online' && (
-                  <button 
-                    onClick={() => navigate(`/video-call/${item._id}`)}
-                    className={`text-xs text-center py-2.5 px-4 rounded-xl border transition-all font-bold ${
-                      item.videoCallStatus === 'active' 
-                        ? 'bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500 shadow-md animate-pulse' 
-                        : 'bg-amber-50 text-amber-700 border-amber-200 hover:bg-amber-100'
-                    }`}
-                  >
-                    {item.videoCallStatus === 'active' ? 'Join Consultation (Active)' : 'Video Consultation (Pending)'}
-                  </button>
+                  (item.videoCallStatus === 'active' || isSlotTimeReached(item.slotDate, item.slotTime)) ? (
+                    <button 
+                      onClick={() => navigate(`/video-call/${item._id}`)}
+                      className={`text-xs text-center py-2.5 px-4 rounded-xl border transition-all font-bold ${
+                        item.videoCallStatus === 'active' 
+                          ? 'bg-emerald-500 text-white hover:bg-emerald-600 border-emerald-500 shadow-md animate-pulse' 
+                          : 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-600 shadow-sm'
+                      }`}
+                    >
+                      {item.videoCallStatus === 'active' ? 'Join Consultation (Doctor Live)' : 'Join Video Consultation'}
+                    </button>
+                  ) : (
+                    <div className="space-y-1 text-center">
+                      <button 
+                        disabled
+                        className="w-full text-xs text-center py-2.5 px-3 rounded-xl border border-gray-200 bg-gray-100 text-gray-400 font-semibold cursor-not-allowed"
+                      >
+                        Opens at Slot Time
+                      </button>
+                      <p className="text-[10px] text-gray-400">
+                        {getTimeUntilSlot(item.slotDate, item.slotTime) || 'Opens at slot time'}
+                      </p>
+                    </div>
+                  )
                 )}
 
                 {item.cancelled && item.payment && (
@@ -191,8 +249,27 @@ const MyAppointment = () => {
                 )}
 
                 {item.isCompleted && (
-                  <button className='py-2.5 border border-emerald-500 rounded-xl text-emerald-600 font-bold text-xs bg-emerald-50/20 cursor-default text-center'>
-                    Completed
+                  <div className="flex flex-col gap-2">
+                    <button className='py-2 border border-emerald-500 rounded-xl text-emerald-600 font-bold text-xs bg-emerald-50/20 cursor-default text-center'>
+                      Completed
+                    </button>
+                    {item.prescription?.medicines?.length > 0 && (
+                      <button
+                        onClick={() => setSelectedPrescriptionAppointment(item)}
+                        className='py-2 px-3 bg-primary hover:bg-[#4351ea] text-white rounded-xl font-bold text-xs shadow-xs transition text-center'
+                      >
+                        View Prescription
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {!item.cancelled && !item.isCompleted && item.prescription?.medicines?.length > 0 && (
+                  <button
+                    onClick={() => setSelectedPrescriptionAppointment(item)}
+                    className='py-2 px-3 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-primary rounded-xl font-bold text-xs transition text-center'
+                  >
+                    View Prescription
                   </button>
                 )}
 
@@ -220,9 +297,17 @@ const MyAppointment = () => {
                 )}
               </div>
             </div>
-          ))
-        )}
+          )
+        })
+      )}
       </div>
+
+      {selectedPrescriptionAppointment && (
+        <PrescriptionPDF
+          appointment={selectedPrescriptionAppointment}
+          onClose={() => setSelectedPrescriptionAppointment(null)}
+        />
+      )}
     </div>
   )
 }

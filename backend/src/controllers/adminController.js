@@ -233,4 +233,75 @@ const adminDashboard = async(req,res)=>{
     }
 }
 
-export {addDoctor,allDoctors,appointmentsAdmin,cancelAppointment,adminDashboard}
+const getDoctorOverview = async (req, res) => {
+    try {
+        const { docId } = req.params
+        if (!docId) {
+            return res.status(400).json({
+                success: false,
+                message: "Doctor ID is required"
+            })
+        }
+
+        const doctor = await doctorModel.findById(docId).select('-password')
+        if (!doctor) {
+            return res.status(404).json({
+                success: false,
+                message: "Doctor not found"
+            })
+        }
+
+        const appointments = await Appointment.find({ docId }).sort({ date: -1 })
+
+        let totalEarnings = 0
+        let completedCount = 0
+        let cancelledCount = 0
+        let onlineCount = 0
+        let offlineCount = 0
+        let prescriptionCount = 0
+        const patientIdSet = new Set()
+
+        appointments.forEach(item => {
+            if ((item.isCompleted || item.payment) && !item.cancelled) {
+                totalEarnings += item.amount || 0
+            }
+            if (item.isCompleted) completedCount++
+            if (item.cancelled) cancelledCount++
+            if (item.consultationType === 'online') onlineCount++
+            else offlineCount++
+            if (item.prescription && (item.prescription.diagnosis || (item.prescription.medicines && item.prescription.medicines.length > 0))) {
+                prescriptionCount++
+            }
+            if (item.userId) {
+                patientIdSet.add(item.userId.toString())
+            }
+        })
+
+        const stats = {
+            totalAppointments: appointments.length,
+            completedAppointments: completedCount,
+            cancelledAppointments: cancelledCount,
+            pendingAppointments: Math.max(0, appointments.length - completedCount - cancelledCount),
+            totalEarnings,
+            totalPatients: patientIdSet.size,
+            prescriptionsIssued: prescriptionCount,
+            onlineConsultations: onlineCount,
+            offlineConsultations: offlineCount
+        }
+
+        res.status(200).json({
+            success: true,
+            doctor,
+            stats,
+            appointments
+        })
+    } catch (error) {
+        console.error("Error in getDoctorOverview:", error)
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+export { addDoctor, allDoctors, appointmentsAdmin, cancelAppointment, adminDashboard, getDoctorOverview }

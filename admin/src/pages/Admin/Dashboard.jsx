@@ -1,9 +1,11 @@
-import React, { useContext, useEffect } from 'react'
+import React, { useContext, useEffect, useState } from 'react'
 import { AdminContext } from '../../context/AdminContext'
 import { assets_admin } from '../../assets/assets_admin/assets'
+import DoctorDetailModal from '../../components/DoctorDetailModal'
 
 const Dashboard = () => {
   const { aToken, dashData, getDashData, cancelAppointment } = useContext(AdminContext)
+  const [selectedDocId, setSelectedDocId] = useState(null)
 
   useEffect(() => {
     if (aToken) {
@@ -67,10 +69,14 @@ const Dashboard = () => {
 
               return (
                 <div className='flex items-center justify-between px-4 sm:px-6 py-3.5 hover:bg-gray-50/80 transition-colors gap-3' key={index}>
-                  <div className='flex items-center gap-3 min-w-0 flex-1'>
-                    <img className='rounded-full w-10 h-10 object-cover flex-shrink-0 border border-gray-200' src={docImage || assets_admin.doctor_icon} alt={docName} />
+                  <div 
+                    onClick={() => item.docId && setSelectedDocId(item.docId)}
+                    className='flex items-center gap-3 min-w-0 flex-1 cursor-pointer group'
+                    title="Click to view Doctor 360° Profile"
+                  >
+                    <img className='rounded-full w-10 h-10 object-cover flex-shrink-0 border border-gray-200 group-hover:scale-105 transition-transform' src={docImage || assets_admin.doctor_icon} alt={docName} />
                     <div className='min-w-0 flex-1 text-xs sm:text-sm'>
-                      <p className='text-gray-800 font-semibold truncate'>{docName}</p>
+                      <p className='text-gray-800 font-semibold truncate group-hover:text-primary transition-colors'>{docName}</p>
                       <p className='text-gray-500 text-[11px] sm:text-xs mt-0.5'>{item.slotDate}</p>
                     </div>
                   </div>
@@ -98,6 +104,14 @@ const Dashboard = () => {
           )}
         </div>
       </div>
+
+      {selectedDocId && (
+        <DoctorDetailModal
+          docId={selectedDocId}
+          onClose={() => setSelectedDocId(null)}
+          onAvailabilityChange={() => getDashData()}
+        />
+      )}
     </div>
   )
 }

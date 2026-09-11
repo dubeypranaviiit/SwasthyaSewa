@@ -48,6 +48,7 @@ const Navbar = () => {
               <div className='min-w-48 bg-white border border-gray-150 rounded-2xl shadow-xl flex flex-col gap-3 p-4'>
                 <p onClick={() => navigate('/MyProfile')} className='hover:text-primary cursor-pointer transition-colors'>My Profile</p>
                 <p onClick={() => navigate('/my-appointment')} className='hover:text-primary cursor-pointer transition-colors'>My Appointments</p>
+                <p onClick={() => navigate('/medical-history')} className='hover:text-primary cursor-pointer transition-colors'>Medical History</p>
                 <div className="h-px bg-gray-100 my-0.5"></div>
                 <p onClick={logout} className='hover:text-red-600 text-red-500 font-semibold cursor-pointer transition-colors'>Logout</p>
               </div>
@@ -96,6 +97,9 @@ const Navbar = () => {
                   </NavLink>
                   <NavLink onClick={() => setShowMenu(false)} to='/my-appointment' className="py-2.5 border-b border-gray-50">
                     <p className='hover:text-primary transition-all'>My Appointments</p>
+                  </NavLink>
+                  <NavLink onClick={() => setShowMenu(false)} to='/medical-history' className="py-2.5 border-b border-gray-50">
+                    <p className='hover:text-primary transition-all'>Medical History</p>
                   </NavLink>
                 </>
               )}

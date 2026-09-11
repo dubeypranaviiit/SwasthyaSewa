@@ -4,11 +4,15 @@ import { AppContext } from '../../context/AppContext'
 import { assets_admin } from '../../assets/assets_admin/assets'
 import axios from 'axios'
 import { toast } from 'react-toastify'
+import PrescriptionModal from '../../components/PrescriptionModal'
+import PatientHistoryDrawer from '../../components/PatientHistoryDrawer'
 
 const DoctorAppointments = () => {
   const { dToken, appointments, getAppointments, appointmentCancel, appointmentComplete, backendUrl, frontendUrl } = useContext(DoctorContext)
   const { calculateAge, currency } = useContext(AppContext)
   const [activeReport, setActiveReport] = useState(null)
+  const [activePrescriptionAppointment, setActivePrescriptionAppointment] = useState(null)
+  const [activeHistoryPatient, setActiveHistoryPatient] = useState(null)
 
   const startVideoCall = async (appointmentId) => {
     try {
@@ -74,15 +78,31 @@ const DoctorAppointments = () => {
                   <img className='w-12 h-12 rounded-xl object-cover border border-gray-100' src={item.userData?.image} alt={item.userData?.name} />
                   <div className='flex-1 min-w-0'>
                     <p className='font-bold text-gray-800 text-sm truncate'>{item.userData?.name}</p>
-                    <p className='text-xs text-gray-500'>Age: {calculateAge(item.userData?.dob)} yrs</p>
-                    {item.checkupReport && (
-                      <button 
-                        onClick={() => setActiveReport({ ...item.checkupReport, patientName: item.userData?.name })}
-                        className='text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md font-bold mt-1 hover:bg-emerald-100 transition'
+                    <p className='text-xs text-gray-500'>Age: {calculateAge(item.userData?.dob)} yrs · {item.userData?.gender || 'Not Selected'}</p>
+                    <div className="flex flex-wrap gap-1.5 mt-1">
+                      {item.checkupReport && (
+                        <button 
+                          onClick={() => setActiveReport({ ...item.checkupReport, patientName: item.userData?.name })}
+                          className='text-[10px] bg-emerald-50 text-emerald-600 border border-emerald-200 px-2 py-0.5 rounded-md font-bold hover:bg-emerald-100 transition'
+                        >
+                          Checkup Report
+                        </button>
+                      )}
+                      <button
+                        onClick={() => setActiveHistoryPatient({ userId: item.userId, name: item.userData?.name })}
+                        className='text-[10px] bg-gray-100 text-gray-700 border border-gray-200 px-2 py-0.5 rounded-md font-bold hover:bg-gray-200 transition'
                       >
-                        Checkup Report
+                        Patient History
                       </button>
-                    )}
+                      {!item.cancelled && (
+                        <button
+                          onClick={() => setActivePrescriptionAppointment(item)}
+                          className='text-[10px] bg-indigo-50 text-primary border border-indigo-200 px-2 py-0.5 rounded-md font-bold hover:bg-indigo-100 transition'
+                        >
+                          {item.prescription?.diagnosis ? 'Prescription (Saved)' : 'Write Prescription'}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
 
@@ -101,7 +121,15 @@ const DoctorAppointments = () => {
                   {item.cancelled ? (
                     <span className="text-red-500 font-bold text-xs bg-red-50 px-2.5 py-1 rounded border border-red-100">Cancelled</span>
                   ) : item.isCompleted ? (
-                    <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded border border-emerald-100">Completed</span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2.5 py-1 rounded border border-emerald-100">Completed</span>
+                      <button
+                        onClick={() => setActivePrescriptionAppointment(item)}
+                        className="text-xs bg-indigo-50 text-primary border border-indigo-200 px-2.5 py-1 rounded font-bold hover:bg-indigo-100 transition"
+                      >
+                        {item.prescription?.diagnosis ? 'View / Edit Rx' : 'Write Rx'}
+                      </button>
+                    </div>
                   ) : (
                     <div className='flex items-center justify-between w-full gap-2'>
                       <div className="flex gap-2">
@@ -191,13 +219,21 @@ const DoctorAppointments = () => {
                       <img className='w-10 h-10 rounded-xl object-cover border border-gray-100 flex-shrink-0' src={item.userData?.image} alt={item.userData?.name} />
                       <div className='flex flex-col items-start min-w-0'>
                         <p className="font-bold text-gray-800 truncate">{item.userData?.name}</p>
-                        <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider mt-0.5 border ${
-                          item.consultationType === 'online'
-                            ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                            : 'bg-indigo-50 text-primary border-indigo-100'
-                        }`}>
-                          {item.consultationType || 'offline'}
-                        </span>
+                        <div className="flex items-center gap-1.5 flex-wrap mt-0.5">
+                          <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold uppercase tracking-wider border ${
+                            item.consultationType === 'online'
+                              ? 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                              : 'bg-indigo-50 text-primary border-indigo-100'
+                          }`}>
+                            {item.consultationType || 'offline'}
+                          </span>
+                          <button
+                            onClick={() => setActiveHistoryPatient({ userId: item.userId, name: item.userData?.name })}
+                            className="text-[9px] bg-gray-100 text-gray-700 border border-gray-200 px-1.5 py-0.5 rounded font-bold hover:bg-gray-200 transition"
+                          >
+                            History
+                          </button>
+                        </div>
                         {item.checkupReport && (
                           <button 
                             onClick={() => setActiveReport({ ...item.checkupReport, patientName: item.userData?.name })}
@@ -215,7 +251,7 @@ const DoctorAppointments = () => {
                       </span>
                     </div>
 
-                    <p className='font-medium text-gray-600'>{calculateAge(item.userData?.dob)}</p>
+                    <p className='font-medium text-gray-700 text-xs'>{calculateAge(item.userData?.dob)} yrs <span className='text-[10px] text-gray-400 block font-normal'>{item.userData?.gender || 'Not Selected'}</span></p>
 
                     <div>
                       <p className='font-semibold text-gray-800'>{item.slotDate}</p>
@@ -228,9 +264,24 @@ const DoctorAppointments = () => {
                       {item.cancelled ? (
                         <span className="text-red-500 font-bold text-xs bg-red-50 px-2 py-0.5 rounded border border-red-100">Cancelled</span>
                       ) : item.isCompleted ? (
-                        <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Completed</span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-emerald-600 font-bold text-xs bg-emerald-50 px-2 py-0.5 rounded border border-emerald-100">Completed</span>
+                          <button
+                            onClick={() => setActivePrescriptionAppointment(item)}
+                            className="text-[11px] font-bold px-2 py-1 rounded-lg border border-indigo-200 bg-indigo-50/80 text-primary hover:bg-indigo-100 transition"
+                          >
+                            {item.prescription?.diagnosis ? 'View / Edit Rx' : 'Write Rx'}
+                          </button>
+                        </div>
                       ) : (
                         <div className='flex items-center gap-2'>
+                          <button
+                            onClick={() => setActivePrescriptionAppointment(item)}
+                            className="text-[11px] font-bold px-2 py-1 rounded-lg border border-indigo-200 bg-indigo-50/80 text-primary hover:bg-indigo-100 transition"
+                            title="Prescribe Medication"
+                          >
+                            {item.prescription?.diagnosis ? 'Edit Rx' : 'Write Rx'}
+                          </button>
                           <button onClick={() => appointmentCancel(item._id)} title="Cancel Appointment" className="p-1 rounded hover:bg-red-50">
                             <img className='w-6 h-6 cursor-pointer hover:scale-110 transition' src={assets_admin.cancel_icon} alt="Cancel" />
                           </button>
@@ -290,6 +341,25 @@ const DoctorAppointments = () => {
           </div>
         </div>
       </div>
+
+      {activePrescriptionAppointment && (
+        <PrescriptionModal
+          appointment={activePrescriptionAppointment}
+          onClose={() => setActivePrescriptionAppointment(null)}
+          onSuccess={() => {
+            getAppointments()
+            setActivePrescriptionAppointment(null)
+          }}
+        />
+      )}
+
+      {activeHistoryPatient && (
+        <PatientHistoryDrawer
+          userId={activeHistoryPatient.userId}
+          patientName={activeHistoryPatient.name}
+          onClose={() => setActiveHistoryPatient(null)}
+        />
+      )}
 
       {activeReport && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-xs z-50 flex items-center justify-center p-3 sm:p-4">

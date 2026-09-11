@@ -231,6 +231,87 @@ const updateDoctorProfile = async (req, res) => {
     }
 }
 
+const savePrescription = async (req, res) => {
+    try {
+        const { docId, appointmentId, prescriptionData } = req.body
+
+        if (!appointmentId || !prescriptionData) {
+            return res.status(400).json({
+                success: false,
+                message: "Appointment ID and prescription details are required"
+            })
+        }
+
+        const appointment = await Appointment.findById(appointmentId)
+
+        if (!appointment) {
+            return res.status(404).json({
+                success: false,
+                message: "Appointment not found"
+            })
+        }
+
+        if (appointment.docId.toString() !== docId.toString()) {
+            return res.status(403).json({
+                success: false,
+                message: "Unauthorized action for this appointment"
+            })
+        }
+
+        const updatedPrescription = {
+            ...prescriptionData,
+            prescribedAt: new Date()
+        }
+
+        appointment.prescription = updatedPrescription
+        appointment.isCompleted = true
+        await appointment.save()
+
+        res.status(200).json({
+            success: true,
+            message: "Prescription saved successfully",
+            prescription: appointment.prescription
+        })
+    } catch (error) {
+        console.error("Error in savePrescription:", error)
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
+const getPatientHistory = async (req, res) => {
+    try {
+        const { userId } = req.params
+
+        if (!userId) {
+            return res.status(400).json({
+                success: false,
+                message: "Patient ID is required"
+            })
+        }
+
+        const history = await Appointment.find({
+            userId,
+            cancelled: false
+        })
+            .select("_id slotDate slotTime docData prescription checkupReport date userData isCompleted consultationType amount")
+            .sort({ date: -1 })
+
+        res.status(200).json({
+            success: true,
+            history
+        })
+    } catch (error) {
+        console.error("Error in getPatientHistory:", error)
+        res.status(500).json({
+            success: false,
+            message: error.message
+        })
+    }
+}
+
 export {
     changeAvailablity,
     doctorList,
@@ -239,5 +320,7 @@ export {
     appointmentComplete,
     doctorDashboard,
     doctorProfile,
-    updateDoctorProfile
+    updateDoctorProfile,
+    savePrescription,
+    getPatientHistory
 }
