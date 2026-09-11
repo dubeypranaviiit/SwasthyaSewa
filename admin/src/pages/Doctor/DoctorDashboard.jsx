@@ -6,7 +6,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const DoctorDashboard = () => {
-  const { dToken, dashData, getDashData, appointmentComplete, appointmentCancel, backendUrl } = useContext(DoctorContext)
+  const { dToken, dashData, getDashData, appointmentComplete, appointmentCancel, backendUrl, frontendUrl } = useContext(DoctorContext)
   const { currency, calculateAge } = useContext(AppContext)
 
   useEffect(() => {
@@ -21,7 +21,7 @@ const DoctorDashboard = () => {
       if (data.success) {
         toast.success("Video call started successfully!")
         getDashData()
-        window.open(`http://localhost:5173/video-call/${appointmentId}?dToken=${dToken}`, '_blank')
+        window.open(`${frontendUrl}/video-call/${appointmentId}?dToken=${dToken}`, '_blank')
       } else {
         toast.error(data.message)
       }

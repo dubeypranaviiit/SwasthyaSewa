@@ -6,7 +6,7 @@ import axios from 'axios'
 import { toast } from 'react-toastify'
 
 const DoctorAppointments = () => {
-  const { dToken, appointments, getAppointments, appointmentCancel, appointmentComplete, backendUrl } = useContext(DoctorContext)
+  const { dToken, appointments, getAppointments, appointmentCancel, appointmentComplete, backendUrl, frontendUrl } = useContext(DoctorContext)
   const { calculateAge, currency } = useContext(AppContext)
   const [activeReport, setActiveReport] = useState(null)
 
@@ -16,7 +16,7 @@ const DoctorAppointments = () => {
       if (data.success) {
         toast.success("Video call started successfully!")
         getAppointments()
-        window.open(`http://localhost:5173/video-call/${appointmentId}?dToken=${dToken}`, '_blank')
+        window.open(`${frontendUrl}/video-call/${appointmentId}?dToken=${dToken}`, '_blank')
       } else {
         toast.error(data.message)
       }
@@ -126,7 +126,7 @@ const DoctorAppointments = () => {
                           {item.videoCallStatus === 'active' ? (
                             <div className="flex gap-1">
                               <button 
-                                onClick={() => window.open(`http://localhost:5173/video-call/${item._id}?dToken=${dToken}`, '_blank')}
+                                onClick={() => window.open(`${frontendUrl}/video-call/${item._id}?dToken=${dToken}`, '_blank')}
                                 className="bg-emerald-600 text-white text-xs font-bold px-3 py-1.5 rounded-lg shadow-xs"
                               >
                                 Join
@@ -243,7 +243,7 @@ const DoctorAppointments = () => {
                               {item.videoCallStatus === 'active' ? (
                                 <div className="flex items-center gap-1">
                                   <button 
-                                    onClick={() => window.open(`http://localhost:5173/video-call/${item._id}?dToken=${dToken}`, '_blank')}
+                                    onClick={() => window.open(`${frontendUrl}/video-call/${item._id}?dToken=${dToken}`, '_blank')}
                                     className="bg-emerald-500 text-white text-[10px] font-bold px-2 py-1 rounded hover:bg-emerald-600 transition"
                                   >
                                     Join

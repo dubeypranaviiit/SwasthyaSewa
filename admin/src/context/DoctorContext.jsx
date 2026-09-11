@@ -8,6 +8,7 @@ const DoctorContextProvider = (props) => {
     const token = localStorage.getItem('dToken');
     const [dToken, setDToken] = useState(token ? token : '');
     const backendUrl = import.meta.env.VITE_BACKEND_URL
+    const frontendUrl = import.meta.env.VITE_FRONTEND_URL || 'http://localhost:5173'
     const [appointments, setAppointments] = useState([])
     const [profileData, setProfileData] = useState(false)
     const [dashData, setDashData] = useState(false)
@@ -63,7 +64,7 @@ const DoctorContextProvider = (props) => {
             if (data.success) {
                 toast.success(data.message)
                 getAppointments()
-                getDashData() // refresh dashboard as well
+                getDashData()
             } else {
                 toast.error(data.message)
             }
@@ -78,7 +79,7 @@ const DoctorContextProvider = (props) => {
             if (data.success) {
                 toast.success(data.message)
                 getAppointments()
-                getDashData() // refresh dashboard
+                getDashData()
             } else {
                 toast.error(data.message)
             }
@@ -106,6 +107,7 @@ const DoctorContextProvider = (props) => {
     const value = {
         dToken, setDToken,
         backendUrl,
+        frontendUrl,
         appointments, setAppointments, getAppointments,
         profileData, setProfileData, getProfile,
         dashData, setDashData, getDashData,
@@ -121,7 +123,3 @@ const DoctorContextProvider = (props) => {
 }
 
 export default DoctorContextProvider
-
-
-
-//  for login of and signup for admin

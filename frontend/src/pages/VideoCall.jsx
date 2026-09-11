@@ -265,7 +265,7 @@ const VideoCall = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
-  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:4000'
+  const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000'
 
   const parseDocData = useCallback((docDataStr) => {
     if (!docDataStr) return { name: 'Doctor', image: 'https://via.placeholder.com/150' }
