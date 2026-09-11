@@ -299,7 +299,7 @@ async function runTests() {
     console.log(`Results: ${passed} passed, ${failed} failed`);
     console.log("=".repeat(60));
 
-    console.log("\n📋 Manual tests to perform:");
+    console.log("\n Manual tests to perform:");
     console.log("  1. Same email from different IPs: Use a VPN or different device");
     console.log("     → Email limiter should still block after 3 OTP sends");
     console.log("  2. Authenticated user A vs B: Book appointments with 2 users");

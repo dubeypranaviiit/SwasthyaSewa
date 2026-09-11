@@ -1,11 +1,36 @@
 import transporter from "../config/mailer.js"
+import { Resend } from "resend"
 import dotenv from "dotenv"
 dotenv.config()
 
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const fromEmail = process.env.SMTP_EMAIL || "noreply@swasthyasewa.com"
 const fromName = "SwasthyaSewa"
 
 const sendMail = async (to, subject, html, contextName) => {
+    // 1. Try Resend HTTP API first (works seamlessly on Vercel Serverless without SMTP blocking)
+    if (resend) {
+        try {
+            const sender = process.env.RESEND_FROM_EMAIL || "SwasthyaSewa <onboarding@resend.dev>"
+            const { data, error } = await resend.emails.send({
+                from: sender,
+                to: [to],
+                subject,
+                html
+            })
+
+            if (!error && data?.id) {
+                console.log(`[Resend] Email sent (${contextName}): ${data.id} -> ${to}`)
+                return true
+            } else if (error) {
+                console.warn(`[Resend] Failed (${contextName}): ${error.message}. Trying SMTP fallback...`)
+            }
+        } catch (resendErr) {
+            console.warn(`[Resend] Error: ${resendErr.message}. Trying SMTP fallback...`)
+        }
+    }
+
+    // 2. Fallback to Nodemailer SMTP
     try {
         if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
             console.warn(`SMTP not configured. Skipping "${contextName}" email to ${to}`)
@@ -19,10 +44,10 @@ const sendMail = async (to, subject, html, contextName) => {
             html
         })
 
-        console.log(`Email sent (${contextName}): ${info.messageId} -> ${to}`)
+        console.log(`[SMTP] Email sent (${contextName}): ${info.messageId} -> ${to}`)
         return true
     } catch (error) {
-        console.error(`Email failed (${contextName}) to ${to}:`, error.message)
+        console.error(`[SMTP] Email failed (${contextName}) to ${to}:`, error.message)
         return false
     }
 }
