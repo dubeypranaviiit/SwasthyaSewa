@@ -8,7 +8,38 @@ const fromEmail = process.env.SMTP_EMAIL || "noreply@swasthyasewa.com"
 const fromName = "SwasthyaSewa"
 
 const sendMail = async (to, subject, html, contextName) => {
-    // 1. Try Resend HTTP API first (works seamlessly on Vercel Serverless without SMTP blocking)
+    // 1. Try Brevo HTTPS REST API (Free 300 emails/day to ANY recipient without domain verification, never blocked by Render)
+    if (process.env.BREVO_API_KEY) {
+        try {
+            const senderEmail = process.env.BREVO_SENDER_EMAIL || process.env.SMTP_EMAIL || "abpa4402@gmail.com"
+            const response = await fetch("https://api.brevo.com/v3/smtp/email", {
+                method: "POST",
+                headers: {
+                    "accept": "application/json",
+                    "api-key": process.env.BREVO_API_KEY,
+                    "content-type": "application/json"
+                },
+                body: JSON.stringify({
+                    sender: { name: fromName, email: senderEmail },
+                    to: [{ email: to }],
+                    subject: subject,
+                    htmlContent: html
+                })
+            })
+
+            const resData = await response.json()
+            if (response.ok && resData.messageId) {
+                console.log(`[Brevo API] Email sent (${contextName}): ${resData.messageId} -> ${to}`)
+                return true
+            } else {
+                console.warn(`[Brevo API] Failed (${contextName}):`, resData?.message || resData)
+            }
+        } catch (brevoErr) {
+            console.warn(`[Brevo API] Error:`, brevoErr.message)
+        }
+    }
+
+    // 2. Try Resend HTTP API
     if (resend) {
         try {
             const sender = process.env.RESEND_FROM_EMAIL || "SwasthyaSewa <onboarding@resend.dev>"
@@ -23,14 +54,14 @@ const sendMail = async (to, subject, html, contextName) => {
                 console.log(`[Resend] Email sent (${contextName}): ${data.id} -> ${to}`)
                 return true
             } else if (error) {
-                console.warn(`[Resend] Failed (${contextName}): ${error.message}. Trying SMTP fallback...`)
+                console.warn(`[Resend] Failed (${contextName}): ${error.message}`)
             }
         } catch (resendErr) {
-            console.warn(`[Resend] Error: ${resendErr.message}. Trying SMTP fallback...`)
+            console.warn(`[Resend] Error: ${resendErr.message}`)
         }
     }
 
-    // 2. Fallback to Nodemailer SMTP
+    // 3. Fallback to Nodemailer SMTP (Works on local or paid instances)
     try {
         if (!process.env.SMTP_EMAIL || !process.env.SMTP_PASSWORD) {
             console.warn(`SMTP not configured. Skipping "${contextName}" email to ${to}`)
