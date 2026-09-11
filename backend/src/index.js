@@ -2,6 +2,11 @@ import express from "express"
 import cors from "cors"
 import helmet from "helmet"
 import dotenv from "dotenv"
+import dns from "node:dns"
+
+if (dns.setDefaultResultOrder) {
+    dns.setDefaultResultOrder("ipv4first")
+}
 import dbConnect from "./config/database.js";
 import cloudinaryConnect from "./config/cloudinary.js"
 import { initRedis } from "./config/redis.js"
