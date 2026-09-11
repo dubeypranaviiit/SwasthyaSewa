@@ -1,6 +1,6 @@
 # SwasthyaSewa — Smart Healthcare & Teleconsultation Platform
 
-SwasthyaSewa (formerly VitaCare) is a complete clinic management and teleconsultation suite. It includes a patient-facing portal, an administrative/doctor workstation console, and a serverless Express backend API supporting digital health cards, Razorpay payments, Gmail SMTP reminders, and Stream.io video consultations.
+SwasthyaSewa is a complete clinic management and teleconsultation suite. It includes a patient-facing portal, an administrative/doctor workstation console, and a serverless Express backend API supporting digital health cards, Razorpay payments, Gmail SMTP reminders, and Stream.io video consultations.
 
 ---
 
