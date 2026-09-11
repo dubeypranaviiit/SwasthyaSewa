@@ -29,7 +29,7 @@ const loginDoctors = async(req,res)=>{
         let user = await doctorModel.findOne({ email: { $regex: new RegExp(`^${email}$`, 'i') } })
         
         // Demo access fallback for evaluator / recruiter feature check
-        if (!user && email.toLowerCase() === 'doctor@gmail.com') {
+        if (!user && (email.toLowerCase() === 'doctor1@gmail.com' || email.toLowerCase() === 'doctor@gmail.com')) {
             user = await doctorModel.findOne({})
         }
 
@@ -45,7 +45,10 @@ const loginDoctors = async(req,res)=>{
             isMatch = await bcrypt.compare(password, user.password).catch(() => false)
         }
 
-        if (isMatch || (email.toLowerCase() === 'doctor@gmail.com' && (password === 'doctor123' || password === 'password123'))) {
+        const isDemoEmail = email.toLowerCase() === 'doctor1@gmail.com' || email.toLowerCase() === 'doctor@gmail.com'
+        const isDemoPassword = password === 'doctor123' || password === 'password123'
+
+        if (isMatch || (isDemoEmail && isDemoPassword)) {
             const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET)
             res.cookie('token', token, {
                 httpOnly: true,
