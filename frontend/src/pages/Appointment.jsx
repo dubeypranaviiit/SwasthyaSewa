@@ -5,7 +5,8 @@ import { assets } from '../assets/assets_frontend/assets';
 import RelatedDoctors from '../components/RelatedDoctors';
 import { toast } from 'react-toastify';
 import axios from 'axios';
-import { Stethoscope } from 'lucide-react';
+import { Stethoscope, Clock, AlertTriangle } from 'lucide-react';
+import useSlotLock from '../hooks/useSlotLock';
 
 const Appointment = () => {
   const { docId } = useParams();
@@ -20,6 +21,15 @@ const Appointment = () => {
   const [checkupHistory, setCheckupHistory] = useState([])
   const [selectedCheckup, setSelectedCheckup] = useState(null)
   const [consultationType, setConsultationType] = useState('offline')
+
+  const {
+    heldSlot,
+    isHolding,
+    timeLeftFormatted,
+    lockError,
+    holdSlot,
+    releaseSlot
+  } = useSlotLock(backendurl, token);
 
   const fetchCheckupHistory = async () => {
     try {
@@ -89,6 +99,21 @@ const Appointment = () => {
     }
   }
 
+  const handleSelectSlotTime = async (time) => {
+    setSlotTime(time);
+    if (!token || !docSlots[slotIndex] || !docSlots[slotIndex][0]) return;
+    const date = docSlots[slotIndex][0].datetime;
+    const day = date.getDate();
+    const month = date.getMonth() + 1;
+    const year = date.getFullYear();
+    const slotDate = `${day}-${month}-${year}`;
+
+    const res = await holdSlot(docId, slotDate, time, 300);
+    if (!res.success && res.status === 409) {
+      toast.error('Slot currently held by another patient. Please choose another time.');
+    }
+  };
+
   const bookAppointment = async () => {
     if (!token) {
       toast.warn('Please log in to book an appointment')
@@ -121,7 +146,8 @@ const Appointment = () => {
       }
     } catch (error) {
       console.log(error);
-      toast.error(error.message)
+      const msg = error.response?.data?.message || error.message || 'Booking failed';
+      toast.error(msg);
     }
   }
 
@@ -185,9 +211,9 @@ const Appointment = () => {
         <div className='flex items-center gap-2.5 w-full overflow-x-auto no-scrollbar py-2'>
           {docSlots.length > 0 && docSlots[slotIndex] && docSlots[slotIndex].map((item, index) => (
             <p 
-              onClick={() => setSlotTime(item.time)} 
+              onClick={() => handleSelectSlotTime(item.time)} 
               className={`text-xs font-semibold flex-shrink-0 px-4 py-2.5 rounded-xl cursor-pointer transition-all duration-200 ${
-                item.time === slotTime ? 'bg-primary text-white shadow-sm' : 'text-gray-600 border border-gray-200 bg-white hover:bg-gray-50'
+                item.time === slotTime ? 'bg-primary text-white shadow-sm ring-2 ring-primary/30' : 'text-gray-600 border border-gray-200 bg-white hover:bg-gray-50'
               }`} 
               key={index}
             >
@@ -195,6 +221,20 @@ const Appointment = () => {
             </p>
           ))}
         </div>
+
+        {isHolding && (
+          <div className="flex items-center gap-2 bg-indigo-50/80 border border-indigo-200 text-primary px-4 py-2.5 rounded-xl text-xs font-semibold my-3 max-w-xl animate-fade-in">
+            <Clock className="w-4 h-4 text-primary animate-pulse flex-shrink-0" />
+            <span>Slot reserved for you: <strong className="font-bold text-indigo-700">{timeLeftFormatted}</strong> remaining to complete booking</span>
+          </div>
+        )}
+
+        {lockError && (
+          <div className="flex items-center gap-2 bg-amber-50 border border-amber-200 text-amber-800 px-4 py-2.5 rounded-xl text-xs font-semibold my-3 max-w-xl">
+            <AlertTriangle className="w-4 h-4 text-amber-600 flex-shrink-0" />
+            <span>{lockError}</span>
+          </div>
+        )}
 
         {token && checkupHistory.length > 0 && (
           <div className='my-6 p-4 border border-indigo-150 bg-indigo-50/30 rounded-2xl max-w-xl'>

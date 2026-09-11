@@ -3,7 +3,7 @@ import { AdminContext } from '../../context/AdminContext'
 import { AppContext } from '../../context/AppContext'
 import { assets_admin } from '../../assets/assets_admin/assets'
 
-const AllApointment = () => {
+const AllAppointments = () => {
   const { aToken, appointments, getAllAppointments, cancelAppointment } = useContext(AdminContext)
   const { calculateAge } = useContext(AppContext)
   const [activeReport, setActiveReport] = useState(null)
@@ -280,4 +280,4 @@ const AllApointment = () => {
   )
 }
 
-export default AllApointment
+export default AllAppointments

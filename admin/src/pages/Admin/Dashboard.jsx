@@ -2,7 +2,7 @@ import React, { useContext, useEffect } from 'react'
 import { AdminContext } from '../../context/AdminContext'
 import { assets_admin } from '../../assets/assets_admin/assets'
 
-const Dadshboard = () => {
+const Dashboard = () => {
   const { aToken, dashData, getDashData, cancelAppointment } = useContext(AdminContext)
 
   useEffect(() => {
@@ -102,4 +102,4 @@ const Dadshboard = () => {
   )
 }
 
-export default Dadshboard
+export default Dashboard

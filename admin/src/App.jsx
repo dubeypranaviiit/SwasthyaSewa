@@ -6,8 +6,8 @@ import {AdminContext} from "./context/AdminContext";
 import Navbar from "./components/Navbar";
 import Sidebar from "./components/Sidebar";
 import { Route, Routes, useLocation } from "react-router-dom";
-import Dadshboard from "./pages/Admin/Dadshboard";
-import AllApointment from "./pages/Admin/AllApointment";
+import Dashboard from "./pages/Admin/Dashboard";
+import AllAppointments from "./pages/Admin/AllAppointments";
 import AddDoctor from "./pages/Admin/AddDoctor";
 import DoctorList from "./pages/Admin/DoctorList";
 import { DoctorContext } from "./context/DoctorContext";
@@ -34,8 +34,8 @@ const App = ()=> {
         <main className="flex-1 min-w-0 w-full p-3 sm:p-5 lg:p-8 max-w-7xl mx-auto">
           <Routes>
             <Route path="/" element={<></>}></Route>
-            <Route path="/admin-dashboard" element={<Dadshboard/>}></Route>
-            <Route path="/all-appointments" element={<AllApointment />}></Route>
+            <Route path="/admin-dashboard" element={<Dashboard/>}></Route>
+            <Route path="/all-appointments" element={<AllAppointments />}></Route>
             <Route path="/add-doctor" element={<AddDoctor />}></Route>
             <Route path="/doctor-list" element={<DoctorList />}></Route>
 

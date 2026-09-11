@@ -3,7 +3,6 @@ import dns from "node:dns"
 import dotenv from "dotenv"
 dotenv.config()
 
-// Render only supports IPv4 outbound; prevent ENETUNREACH on IPv6 addresses
 if (dns.setDefaultResultOrder) {
     dns.setDefaultResultOrder("ipv4first")
 }
@@ -11,7 +10,7 @@ if (dns.setDefaultResultOrder) {
 const transporter = nodemailer.createTransport({
     host: "smtp.gmail.com",
     port: 587,
-    secure: false, // upgrade later with STARTTLS
+    secure: false,
     auth: {
         user: process.env.SMTP_EMAIL,
         pass: process.env.SMTP_PASSWORD
@@ -19,7 +18,7 @@ const transporter = nodemailer.createTransport({
     tls: {
         rejectUnauthorized: false
     },
-    family: 4, // Force IPv4
+    family: 4,
     connectionTimeout: 10000,
     greetingTimeout: 10000,
     socketTimeout: 10000

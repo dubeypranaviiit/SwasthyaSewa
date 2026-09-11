@@ -3,7 +3,7 @@ import { signUp, login, sendOtp, verifyOtpAndSignup } from "../controllers/userA
 import { getProfile, updateProfile, saveCheckup, getCheckups } from "../controllers/userController.js"
 import { authUser } from "../middleware/authUser.js"
 import upload from "../middleware/multer.js";
-import { bookAppointment, listAppointment, cancelAppointment } from "../controllers/userAppointment.js";
+import { bookAppointment, listAppointment, cancelAppointment, holdSlot, releaseSlot } from "../controllers/userAppointment.js";
 import { paymentRazorPay, verifyRazorPay, checkRefundStatus } from "../controllers/userPayment.js";
 import {
     authLimiter,
@@ -25,6 +25,8 @@ userRouter.post('/login', upload.none(), authLimiter, login)
 userRouter.post('/send-otp', upload.none(), otpSendLimiterByIp, otpSendLimiterByEmail, sendOtp)
 userRouter.post('/verify-otp-signup', upload.none(), otpVerifyLimiterByIp, otpVerifyLimiterByEmail, verifyOtpAndSignup)
 userRouter.post('/update-profile', upload.single('image'), authUser, expensiveLimiter, updateProfile)
+userRouter.post('/hold-slot', upload.none(), authUser, appointmentLimiter, holdSlot)
+userRouter.post('/release-slot', upload.none(), authUser, releaseSlot)
 userRouter.post('/book-appointment', upload.none(), authUser, appointmentLimiter, bookAppointment)
 userRouter.post('/cancel-appointment', upload.none(), authUser, cancellationLimiter, cancelAppointment)
 userRouter.post('/payment-razorpay', upload.none(), authUser, paymentLimiter, paymentRazorPay)

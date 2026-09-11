@@ -10,6 +10,7 @@ if (dns.setDefaultResultOrder) {
 import dbConnect from "./config/database.js";
 import cloudinaryConnect from "./config/cloudinary.js"
 import { initRedis } from "./config/redis.js"
+import { initEmailQueue } from "./queues/emailQueue.js"
 import { globalLimiter, initRateLimiters } from "./middleware/rateLimiter.js"
 import adminRouter from "./routes/adminRoute.js";
 import doctorRouter from "./routes/doctorRoute.js";
@@ -33,9 +34,11 @@ app.use('/api', globalLimiter)
 try {
     await initRedis();
     initRateLimiters();
+    initEmailQueue();
 } catch (err) {
-    console.error(`[Redis] Initialization failed: ${err.message}`);
+    console.error(`[Init] Service startup error: ${err.message}`);
     initRateLimiters();
+    initEmailQueue();
 }
 
 dbConnect()
