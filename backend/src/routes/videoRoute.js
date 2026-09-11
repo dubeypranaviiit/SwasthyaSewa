@@ -4,6 +4,7 @@ import { authUser } from "../middleware/authUser.js"
 import { authDoctor } from "../middleware/authDoctor.js"
 import { createVideoCall, getVideoToken, startVideoCall, endVideoCall, getCallDetails } from "../controllers/videoController.js"
 import upload from "../middleware/multer.js"
+import { expensiveLimiter } from "../middleware/rateLimiter.js"
 
 const videoRouter = express.Router()
 
@@ -27,7 +28,7 @@ const authVideoUserOrDoctor = async (req, res, next) => {
     }
 }
 
-videoRouter.post('/create-call', upload.none(), authUser, createVideoCall)
+videoRouter.post('/create-call', upload.none(), authUser, expensiveLimiter, createVideoCall)
 videoRouter.get('/token', upload.none(), authVideoUserOrDoctor, getVideoToken)
 videoRouter.post('/start-call', upload.none(), authDoctor, startVideoCall)
 videoRouter.post('/end-call', upload.none(), authDoctor, endVideoCall)

@@ -6,9 +6,10 @@ import {dataCheck} from "../middleware/check.js";
 import {adminLogin } from "../controllers/adminAuth.js"
 import {authAdmin } from "../middleware/adminAuth.js"
 import { changeAvailablity } from "../controllers/doctorController.js";
+import { authLimiter, expensiveLimiter } from "../middleware/rateLimiter.js";
 
-adminRouter.post('/add-doctor',upload.single('image'),dataCheck,authAdmin,addDoctor)
-adminRouter.post('/login',adminLogin)
+adminRouter.post('/add-doctor',upload.single('image'),dataCheck,authAdmin,expensiveLimiter,addDoctor)
+adminRouter.post('/login',authLimiter,adminLogin)
 adminRouter.post("/all-doctors",authAdmin,allDoctors)
 adminRouter.post("/change-availability",authAdmin,changeAvailablity)
 adminRouter.get("/appointments",authAdmin,appointmentsAdmin)
