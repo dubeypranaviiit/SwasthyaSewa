@@ -18,6 +18,9 @@ import ReturnRefundPolicy from './pages/ReturnRefundPolicy'
 import VideoCall from './pages/VideoCall'
 import Footer from './components/Footer'
 import Chatbot from './components/Chatbot'
+import AIHealthCheck from './pages/AIHealthCheck'
+import ReportSummaryPage from './pages/ReportSummaryPage'
+import AIChatPage from './pages/AIChatPage'
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -31,6 +34,10 @@ function App() {
           <Route path='/' element={<Home/>} />
           <Route path='/doctors' element={<Doctors/>} />
           <Route path='/doctors/:speciality' element={<Doctors/>} />
+          <Route path='/ai-health-check' element={<AIHealthCheck/>} />
+          <Route path='/ai-health-check/report/:reportId' element={<ReportSummaryPage/>} />
+          <Route path='/ai-health-check/chat' element={<AIChatPage/>} />
+          <Route path='/ai-health-check/chat/:reportId' element={<AIChatPage/>} />
           <Route path='/about' element={<About/>} />
           <Route path='/MyProfile' element={<MyProfile/>} />
           <Route path='/contact' element={<Contact/>} />
