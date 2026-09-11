@@ -3,6 +3,7 @@ import Header from '../components/Header'
 import SpecialityMenu from '../components/SpecialityMenu'
 import TopDoctors from '../components/TopDoctors'
 import Banner from '../components/Banner'
+import RecruiterSection from '../components/RecruiterSection'
 import { Stethoscope, ArrowRight, ShieldCheck } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 
@@ -40,6 +41,7 @@ function Home() {
       </div>
 
       <TopDoctors />
+      <RecruiterSection />
       <Banner/>
     </div>
   )

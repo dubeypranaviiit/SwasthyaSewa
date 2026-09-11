@@ -5,13 +5,24 @@ import axios from "axios"
 import { toast } from "react-toastify"
 
 const Login = () => {
-  const [state, setState] = useState('Admin')
+  const [state, setState] = useState('Doctor')
   const { setAToken, backendUrl } = useContext(AdminContext)
   const { setDToken } = useContext(DoctorContext)
   
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
+  const [email, setEmail] = useState('doctor@gmail.com')
+  const [password, setPassword] = useState('doctor123')
   const [isLoading, setIsLoading] = useState(false)
+
+  const handleStateChange = (newState) => {
+    setState(newState)
+    if (newState === 'Doctor') {
+      setEmail('doctor@gmail.com')
+      setPassword('doctor123')
+    } else {
+      setEmail('')
+      setPassword('')
+    }
+  }
 
   const onSubmitHandler = async (event) => {
     event.preventDefault()
@@ -65,17 +76,17 @@ const Login = () => {
           <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-gray-400">Management & Staff Console</p>
         </div>
 
-        <div className="flex bg-gray-100/80 p-1.5 rounded-2xl w-full mb-6 sm:mb-8 relative border border-gray-200/40">
+        <div className="flex bg-gray-100/80 p-1.5 rounded-2xl w-full mb-4 relative border border-gray-200/40">
           <button 
             type="button"
-            onClick={() => { setState('Admin'); setEmail(''); setPassword(''); }}
+            onClick={() => handleStateChange('Admin')}
             className={`flex-1 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${state === 'Admin' ? 'text-white' : 'text-gray-500 hover:text-gray-800'}`}
           >
             Admin Portal
           </button>
           <button 
             type="button"
-            onClick={() => { setState('Doctor'); setEmail(''); setPassword(''); }}
+            onClick={() => handleStateChange('Doctor')}
             className={`flex-1 py-2 sm:py-2.5 text-xs font-bold rounded-xl transition-all duration-300 relative z-10 ${state === 'Doctor' ? 'text-white' : 'text-gray-500 hover:text-gray-800'}`}
           >
             Doctor Portal
@@ -86,6 +97,19 @@ const Login = () => {
             }`}
           />
         </div>
+
+        {/* Feature Check Callout - Shown only for Doctor */}
+        {state === 'Doctor' && (
+          <div className="bg-amber-50/90 border border-amber-200/80 rounded-2xl p-3 sm:p-3.5 mb-5 flex items-start gap-2.5 text-left">
+            <span className="text-base mt-0.5 flex-shrink-0">🔑</span>
+            <div className="text-xs text-amber-900 leading-relaxed">
+              <p className="font-bold text-amber-950">Password is given for feature check</p>
+              <p className="text-[11px] text-amber-800/90 mt-0.5">
+                Doctor credentials are automatically pre-filled so you can explore the doctor portal features.
+              </p>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-4 sm:space-y-5">
           <div className="w-full flex flex-col items-start">
@@ -99,7 +123,7 @@ const Login = () => {
               <input 
                 type="email" 
                 required
-                placeholder="name@swasthyasewa.com"
+                placeholder={state === 'Doctor' ? 'doctor@gmail.com' : 'admin@swasthyasewa.com'}
                 className="w-full pl-10 pr-4 py-2.5 sm:py-3 bg-gray-50/50 border border-gray-200 rounded-xl focus:outline-none focus:border-primary focus:bg-white focus:ring-4 focus:ring-primary/10 transition-all duration-200 text-sm text-gray-800 font-medium placeholder-gray-400" 
                 onChange={(e) => setEmail(e.target.value)}
                 value={email}
@@ -139,6 +163,12 @@ const Login = () => {
             </svg>
           ) : `Sign In as ${state}`}
         </button>
+
+        {state === 'Doctor' && (
+          <p className="text-[11px] text-center text-gray-500 mt-3.5">
+            Password is given for feature check • Click Sign In to test
+          </p>
+        )}
       </form>
     </div>
   )

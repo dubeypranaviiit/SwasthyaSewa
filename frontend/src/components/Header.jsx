@@ -5,15 +5,33 @@ import { useNavigate } from 'react-router-dom';
 
 export default function HeroBanner() {
   const navigate = useNavigate();
+  const adminUrl = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174';
+
   return (
     <section className="bg-white py-8 sm:py-12 lg:py-16 w-full">
       <div className="grid lg:grid-cols-2 gap-8 lg:gap-12 items-center">
         <div className="space-y-6 text-center lg:text-left">
-          <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
-            <Calendar className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
-            <span className="text-xs sm:text-sm font-medium text-primary">
-              Book appointment instantly
-            </span>
+          <div className="flex flex-wrap items-center justify-center lg:justify-start gap-2.5">
+            <div className="inline-flex items-center px-4 py-2 bg-primary/10 rounded-full border border-primary/20">
+              <Calendar className="w-4 h-4 text-primary mr-2 flex-shrink-0" />
+              <span className="text-xs sm:text-sm font-medium text-primary">
+                Book appointment instantly
+              </span>
+            </div>
+
+            <a
+              href={adminUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-50 to-indigo-50 hover:from-violet-100 hover:to-indigo-100 text-indigo-700 border border-indigo-200/80 rounded-full text-xs sm:text-sm font-semibold shadow-sm transition-all hover:scale-105 active:scale-95 group"
+            >
+              <span className="flex h-2 w-2 relative">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-indigo-400 opacity-75"></span>
+                <span className="relative inline-flex rounded-full h-2 w-2 bg-indigo-600"></span>
+              </span>
+              <span>Doctor / Admin Portal</span>
+              <span className="text-indigo-500 group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">↗</span>
+            </a>
           </div>
 
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 leading-tight tracking-tight">
@@ -32,7 +50,7 @@ export default function HeroBanner() {
             <img className="w-36 sm:w-40 h-auto" src={assets.group_profiles} alt="Doctors" />
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 pt-2 justify-center lg:justify-start">
+          <div className="flex flex-wrap gap-3 sm:gap-4 pt-2 justify-center lg:justify-start items-center">
             <button 
               onClick={() => { navigate('/doctors'); scrollTo(0,0); }}
               className="px-6 sm:px-8 py-3.5 bg-primary text-white text-xs sm:text-sm font-bold rounded-full hover:bg-opacity-95 active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
@@ -47,6 +65,16 @@ export default function HeroBanner() {
             >
               Explore Doctors
             </button>
+
+            <a 
+              href={adminUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-5 sm:px-6 py-3.5 bg-slate-900 hover:bg-slate-800 text-white text-xs sm:text-sm font-bold rounded-full hover:shadow-xl active:scale-95 transition-all duration-300 flex items-center justify-center gap-2 group shadow-md"
+            >
+              <span>Doctor / Admin Portal</span>
+              <span className="text-gray-400 group-hover:text-white group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform">↗</span>
+            </a>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-4 text-left">

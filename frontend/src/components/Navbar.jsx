@@ -14,6 +14,8 @@ const Navbar = () => {
     navigate('/')
   }
 
+  const adminUrl = import.meta.env.VITE_ADMIN_URL || 'http://localhost:5174'
+
   return (
     <div className='flex items-center justify-between text-sm py-4 mb-6 border-b border-gray-200 w-full relative z-40'>
       <h1 onClick={() => navigate('/')} className='text-2xl sm:text-3xl font-extrabold cursor-pointer text-gray-900 tracking-tight flex items-center gap-1'>
@@ -109,6 +111,17 @@ const Navbar = () => {
                   </NavLink>
                 </>
               )}
+
+              <a
+                href={adminUrl}
+                target='_blank'
+                rel='noopener noreferrer'
+                onClick={() => setShowMenu(false)}
+                className="py-2.5 border-b border-gray-50 flex items-center justify-between text-gray-700 hover:text-primary font-semibold transition-all group"
+              >
+                <span>Doctor / Admin Portal</span>
+                <span className="text-gray-400 group-hover:text-primary transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5">↗</span>
+              </a>
             </ul>
           </div>
 
